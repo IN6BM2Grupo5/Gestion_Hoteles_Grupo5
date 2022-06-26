@@ -9,6 +9,8 @@ api.post('/agregarEmpresa',md_autenticacion.Auth, usuarioController.Registrar);
 api.post('/login', usuarioController.Login);
 api.put('/editarUsuario/:idUsuario?', md_autenticacion.Auth, usuarioController.EditarUsuario);
 api.delete('/eliminarUsuario/:idUsuario?', md_autenticacion.Auth, usuarioController.EliminarUsuario);
-api.get('/empresaId/:idUsuario',md_autenticacion.Auth, usuarioController.encontrarUsuarioId)
-api.get('/empresas',md_autenticacion.Auth, usuarioController.encontrarUsuarios);
+api.get('/usuarioId/:idUsuario',md_autenticacion.Auth, usuarioController.encontrarUsuarioId)
+api.get('/usuarios',md_autenticacion.Auth, usuarioController.encontrarUsuarios);
+api.get('/Admins',md_autenticacion.Auth, usuarioController.encontrarAdminHotel);
+api.get('/usuariosPorNombre/:nombre',md_autenticacion.Auth, usuarioController.buscarusuariosPorNombre);
 module.exports = api;

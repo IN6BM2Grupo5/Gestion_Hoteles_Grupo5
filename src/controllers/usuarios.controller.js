@@ -222,8 +222,8 @@ function EliminarUsuario(req, res) {
 
 function encontrarUsuarios(req, res) {
 
-  if (req.user.rol == 'Admin_APP' || req.user.rol == 'Admin_Hotel') {
-    Usuario.find({ rol: "Cliente" }, (err, usuariosEncontrados) => {
+  if (req.user.rol == 'Admin_APP' ) {
+    Usuario.find({ rol: "Cliente" || "Admin_Hotel" }, (err, usuariosEncontrados) => {
       if (usuariosEncontrados.length == 0) return res.status(200).send({ mensaje: "no cuenta con usuarios" })
 
       return res.status(200).send({ usuarios: usuariosEncontrados })
@@ -235,12 +235,37 @@ function encontrarUsuarios(req, res) {
 
 function encontrarUsuarioId(req, res) {
   var idUser = req.params.idUsuario;
-  Usuario.findById(idUser, (err, usuarioEncontrao) => {
+  Usuario.findById(idUser, (err, usuarioEncontrado) => {
     if (err) return res.status(500).send({ mensaje: "Error en la peticion" });
-    if (!usuarioEncontrao) return res.status(500).send({ mensaje: "Error al obtener la empresa" });
+    if (!usuarioEncontrado) return res.status(500).send({ mensaje: "Error al obtener la empresa" });
 
-    return res.status(200).send({ usuario: usuarioEncontrao });
+    return res.status(200).send({ usuario: usuarioEncontrado });
   })
+}
+
+function encontrarAdminHotel(req,res){
+  if(req.user.rol == 'Admin_APP'){
+    Usuario.find({rol:"Admin_Hotel"}, (err, usuariosEncontrados)=>{
+      if(err)  return res.status(404).send({mensaje:"Error en la peticion de la empresa" });
+      if(!usuariosEncontrados) return res.status(500).send({mensaje:'Error al encontrar a los administradores'});
+
+      return res.status(200).send({usuarios: usuariosEncontrados});
+    })
+  }else{
+    return res.status(500).send({mensaje:'No esta autorizado'})
+  }
+}
+
+function buscarusuariosPorNombre(req,res){
+  var nombre = req.params.nombre;
+  if(req.user.rol == 'Admin_APP'){
+    Usuario.find({rol:"Cliente" || "Admin_Hotel", nombre:{ $regex: nombre, $options: 'i' }},(err,usuariosEncontrados)=>{
+      if(err) return res.status(404).send({mensaje:'Error en la peticion'});
+      if(!usuariosEncontrados) return res.status(500).send({mensaje:'Error al encontrar coincidencias'});
+
+      return res.status(200).send({usuarios: usuariosEncontrados});
+    })
+  }
 }
 
 //Exports
@@ -252,6 +277,8 @@ module.exports = {
   EliminarUsuario,
   AdminApp,
   encontrarUsuarioId,
-  encontrarUsuarios
+  encontrarUsuarios,
+  encontrarAdminHotel,
+  buscarusuariosPorNombre
 };
 

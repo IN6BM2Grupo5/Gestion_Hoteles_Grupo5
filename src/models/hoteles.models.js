@@ -3,14 +3,10 @@ const Schema = mongoose.Schema;
 
 const HotelesSchema = Schema({
     nombreHotel:String,
-    pais: String,
-    direccion: String,
-    cuartos:[{
-        numero:String,
-        estado:Boolean,
-        precio:Number
-    }],
-    idUsuario: {type: Schema.Types.ObjectId, ref: 'usuarios'} 
+    municipio: String,
+    direccion:String,
+    idUsuario: {type: Schema.Types.ObjectId, ref: 'usuarios'},
+    reservas: Number 
 });
 
 module.exports = mongoose.model('hoteles', HotelesSchema);
