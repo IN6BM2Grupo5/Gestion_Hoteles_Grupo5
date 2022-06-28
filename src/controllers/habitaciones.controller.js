@@ -103,7 +103,7 @@ function verHabitaciones(req,res){
 function verHabitacionPorId(req,res){
     var idHabitacion = req.params.idHabitacion;
     if(req.user.rol == "Admin_Hotel"){
-        Hotel.findById(idHabitacion,(err,habitacionEncontrada)=>{
+        Habitacion.findById(idHabitacion,(err,habitacionEncontrada)=>{
             if(err) return res.status(404).send({mensaje:'No esta autorizado'});
             if(!habitacionEncontrada) return res.status(500).send({mensaje:'Error al encontrar la habitacion'});
 
