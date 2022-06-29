@@ -107,7 +107,7 @@ function AgregarAdminHotel(req, res) {
       parametros.usuario &&
       parametros.password
     ) {
-      usuarioModel.nombre = parametros.nombreEmpresa;
+      usuarioModel.nombre = parametros.nombre;
       usuarioModel.usuario = parametros.usuario;
       usuarioModel.password = parametros.password;
       usuarioModel.cuenta = undefined;
