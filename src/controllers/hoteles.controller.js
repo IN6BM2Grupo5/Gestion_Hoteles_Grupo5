@@ -7,14 +7,14 @@ function agregarHotel(req, res) {
     var hotelModel = new Hotel();
 
     if (req.user.rol == 'Admin_APP') {
-        if (parametros.nombreHotel && parametros.municipio && parametros.direccion && parametros.nombreAdmin) {
+        if (parametros.nombreHotel && parametros.municipio && parametros.direccion && parametros.usuario) {
             Hotel.findOne({ nombreHotel: parametros.nombreHotel }, (err, hotelEncontrado) => {
                 if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
                 if (!hotelEncontrado) {
                     Hotel.findOne({ direccion: parametros.direccion }, (err, direccionIgual) => {
                         if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
                         if (!direccionIgual) {
-                            Usuario.findOne({ nombre: parametros.nombreAdmin }, (err, adminEncontrado) => {
+                            Usuario.findOne({ usuario: parametros.usuario }, (err, adminEncontrado) => {
                                 if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
                                 if (!adminEncontrado) return res.status(500).send({ menssaje: "No se encontro ningun Administrador" });
                                 Hotel.findOne({ idUsuario: adminEncontrado._id }, (err, adminAsignado) => {
@@ -44,6 +44,8 @@ function agregarHotel(req, res) {
                     return res.status(500).send({ mensaje: 'Este hotel ya existe' });
                 }
             })
+        }else{
+            return res.status(500).send({mensaje:'Ingrese todos los parametros'})
         }
     } else {
         return res.status(500).send({ mensaje: 'No esta autorizado' });
