@@ -59,7 +59,7 @@ function Registrar(req, res) {
     parametros.usuario &&
     parametros.password
   ) {
-    usuarioModel.nombre = parametros.nombreEmpresa;
+    usuarioModel.nombre = parametros.nombre;
     usuarioModel.usuario = parametros.usuario;
     usuarioModel.password = parametros.password;
     usuarioModel.cuenta = undefined;
@@ -195,9 +195,9 @@ function EditarUsuario(req, res) {
 function EliminarUsuario(req, res) {
   let idUsuario;
 
-  if (req.user.rol == 'Empresa') {
+  if (req.user.rol == 'Cliente') {
     idUsuario = req.user.sub
-  } else if (req.user.rol == 'Admin') {
+  } else if (req.user.rol == 'Admin_APP') {
 
     if (req.params.idUsuario == null) {
       return res.status(500).send({ mensaje: 'debe enviar el id del usuario' });

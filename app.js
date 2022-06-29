@@ -5,7 +5,6 @@ var app = express();
 const UsuarioRutas = require('./src/routes/usuarios.routes');
 const HotelesRutas = require('./src/routes/hoteles.routes');
 const HabitacionesRutas = require('./src/routes/habitaciones.routes');
-const HotelesRutas = require('./src/routes/hoteles.routes');
 const EventosRutas = require('./src/routes/eventos.routes');
 
 

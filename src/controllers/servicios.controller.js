@@ -35,7 +35,7 @@ function agregarServicio(req, res) {
 }
 
 //Editar
-function editarHabitaciones(req, res) {
+function editarServicio(req, res) {
     var parametros = req.body;
     var idHabitacion = req.params.idHabitacion;
     if (req.user.rol == 'Admin_Hotel') {
