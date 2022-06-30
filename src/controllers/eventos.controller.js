@@ -74,7 +74,7 @@ function eliminarEventos(req, res) {
 
 //Buscar
 function verEventos(req, res) {
-    if (req.user.rol == "Admin_Hotel") {
+    if (req.user.rol == "Admin_Hotel" || req.user.rol == 'Cliente') {
         Hotel.findOne({ idUsuario: req.user.sub }, (err, hotelEncontrado) => {
             if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
             if (!hotelEncontrado) return res.status(500).send({ mensaje: 'Error al encontrar el hotel en la peticion' });

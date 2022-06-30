@@ -103,12 +103,12 @@ function eliminarHotel(req, res) {
 
 //traer hoteles
 function encontrarHoteles(req, res) {
-    if (req.user.rol == 'Admin_APP') {
+    if (req.user.rol == 'Admin_APP' || req.user.rol == 'Cliente') {
         Hotel.find((err, hotelesEncontrados) => {
             if (err) return res.status(404).send({ mensaje: 'Error en la pticion' });
             if (!hotelesEncontrados) return res.status(500).send({ mensaje: 'Error al encontrar los hoteles' });
 
-            return res.satus(200).send({ hoteles: hotelesEncontrados });
+            return res.status(200).send({ hoteles: hotelesEncontrados });
         })
     } else {
         return res.status(500).send({ mensaje: 'No esta autorizado' });
@@ -131,7 +131,7 @@ function econtrarHotelId(req, res) {
 
 function buscarHotelPorNombre(req, res) {
     var nombre = req.params.nombre;
-    if (req.user.rol == 'Admin_APP') {
+    if (req.user.rol == 'Admin_APP' || req.user.rol == 'Cliente') {
         Hotel.find({ nombreHotel: { $regex: nombre, $options: 'i' } }, (err, hotelesEncontrados) => {
             if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
             if (!hotelesEncontrados) return res.status(500).send({ mensaje: 'Error al encontrar los hoteles encontrados' });

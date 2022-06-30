@@ -4,18 +4,16 @@ const Hotel = require("../models/hoteles.models");
 //Agregar
 function agregarServicio(req, res) {
     var parametros = req.body;
-    var habitacionModel = new Habitacion();
+    var servicioModel = new Servicio();
     if (req.user.rol == "Admin_Hotel") {
         if (parametros.servicio && parametros.precio) {
             Hotel.findOne({ idUsuario: req.user.sub }, (err, hotelEncontrado) => {
                 if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
                 if (!hotelEncontrado) return res.status(500).send({ mensaje: 'Error al encontrar el hotel encontrado' });
                 if (parametros.precio >= 0) {
-                    habitacionModel.tipo = parametros.tipo;
-                    habitacionModel.estado = "Disponible";
-                    habitacionModel.registros = 0;
-                    habitacionModel.precio = parametros.precio;
-                    habitacionModel.idHotel = hotelEncontrado._id;
+                    servicioModel.servicio = parametros.servicio;
+                    servicioModel.precio = parametros.precio;
+                    servicioModel.idHotel = hotelEncontrado._id;
                     habitacionModel.save((err, habitacionesGuardadas) => {
                         if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
                         if (!habitacionesGuardadas) return res.status(500).send({ mensaje: 'Error al guardar el hotel' });
@@ -56,7 +54,7 @@ function editarServicio(req, res) {
 }
 
 //Eliminar
-function eliminarHabitaciones(req,res){
+function eliminarServicio(req,res){
     var idHabitacion = req.params.idHabitacion;
     if(req.user.rol == "Admin_Hotel"){
         Hotel.findOne({idUsuario:req.user.sub},(err,hotelEncontrado)=>{

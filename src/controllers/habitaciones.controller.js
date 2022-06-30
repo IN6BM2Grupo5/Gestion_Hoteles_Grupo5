@@ -84,7 +84,7 @@ function eliminarHabitaciones(req,res){
 
 //Buscar
 function verHabitaciones(req,res){
-    if(req.user.rol == "Admin_Hotel"){
+    if(req.user.rol == "Admin_Hotel" || req.user.rol == 'Cliente'){
         Hotel.findOne({idUsuario:req.user.sub},(err,hotelEncontrado)=>{
             if(err) return res.status(404).send({mensaje:'Error en la peticion'});
             if(!hotelEncontrado) return res.status(500).send({mensaje:'Error al encontrar el hotel en la peticion'});
@@ -102,7 +102,7 @@ function verHabitaciones(req,res){
 
 function verHabitacionPorId(req,res){
     var idHabitacion = req.params.idHabitacion;
-    if(req.user.rol == "Admin_Hotel"){
+    if(req.user.rol == "Admin_Hotel" ){
         Habitacion.findById(idHabitacion,(err,habitacionEncontrada)=>{
             if(err) return res.status(404).send({mensaje:'No esta autorizado'});
             if(!habitacionEncontrada) return res.status(500).send({mensaje:'Error al encontrar la habitacion'});
