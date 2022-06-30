@@ -32,7 +32,7 @@ function agregarHotel(req, res) {
                                             return res.status(200).send({ hotel: hotelGuardado })
                                         })
                                     } else {
-                                        return res.status(500).send({mensaje:'Este usuario ya administra un hotel'});
+                                        return res.status(500).send({ mensaje: 'Este usuario ya administra un hotel' });
                                     }
                                 })
                             })
@@ -44,8 +44,8 @@ function agregarHotel(req, res) {
                     return res.status(500).send({ mensaje: 'Este hotel ya existe' });
                 }
             })
-        }else{
-            return res.status(500).send({mensaje:'Ingrese todos los parametros'})
+        } else {
+            return res.status(500).send({ mensaje: 'Ingrese todos los parametros' })
         }
     } else {
         return res.status(500).send({ mensaje: 'No esta autorizado' });
@@ -117,16 +117,12 @@ function encontrarHoteles(req, res) {
 
 function econtrarHotelId(req, res) {
     var idHotel = req.params.idHotel;
-    if (req.user.rol == "Admin_APP" || req.user.rol == "Admin_Hotel") {
-        Hotel.findById(idHotel, (err, hotelEncontrado) => {
-            if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
-            if (!hotelEncontrado) return res.status(500).send({ mensaje: 'Error al encontrar el hotel' });
+    Hotel.findById(idHotel, (err, hotelEncontrado) => {
+        if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
+        if (!hotelEncontrado) return res.status(500).send({ mensaje: 'Error al encontrar el hotel' });
 
-            return res.status(200).send({ hotel: hotelEncontrado });
-        })
-    } else {
-        return res.status(500).send({ mensaje: 'No esta autorizado' });
-    }
+        return res.status(200).send({ hotel: hotelEncontrado });
+    })
 }
 
 function buscarHotelPorNombre(req, res) {
@@ -143,6 +139,24 @@ function buscarHotelPorNombre(req, res) {
     }
 }
 
+function buscarPorAdmin(req, res) {
+    var idAdmin;
+    if (req.user.rol == 'Admin_APP') {
+        idAdmin = req.params.idAdmin;
+    } else if (req.user.rol == 'Admin_Hotel') {
+        idAdmin = req.user.sub;
+    } else {
+        return res.status(500).send({ mensaje: 'No esta autorizado' });
+    }
+
+    Hotel.findOne({ idUsuario: idAdmin }, (err, hotelEncontrado) => {
+        if (err) return res.status(404).send({ mensaje: 'Error en la peticion'});
+        if(!hotelEncontrado) return res.status(500).send({mensaje:'Error al encontrar el hotel'});
+
+        return res.status(200).send({hotel: hotelEncontrado});
+    })
+}
+
 //Exports
 module.exports = {
     agregarHotel,
@@ -150,5 +164,6 @@ module.exports = {
     eliminarHotel,
     encontrarHoteles,
     econtrarHotelId,
-    buscarHotelPorNombre
+    buscarHotelPorNombre,
+    buscarPorAdmin
 }
