@@ -69,7 +69,7 @@ function eliminarHabitaciones(req, res) {
 
 //Buscar
 function verHabitaciones(req, res) {
-    var idHotel;
+    let idHotel;
     if (req.user.rol == 'Admin_APP' || req.user.rol == 'Cliente') {
         idHotel = req.params.idHotel;
     } else if (req.user.rol == 'Admin_Hotel') {

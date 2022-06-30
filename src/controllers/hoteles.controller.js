@@ -140,7 +140,7 @@ function buscarHotelPorNombre(req, res) {
 }
 
 function buscarPorAdmin(req, res) {
-    var idAdmin;
+    let idAdmin;
     if (req.user.rol == 'Admin_APP') {
         idAdmin = req.params.idAdmin;
     } else if (req.user.rol == 'Admin_Hotel') {
