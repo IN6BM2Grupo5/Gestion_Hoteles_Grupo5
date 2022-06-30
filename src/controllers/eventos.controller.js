@@ -6,17 +6,17 @@ function agregarEvento(req, res) {
     var parametros = req.body;
     var eventoModel = new Evento();
     var idHotel = req.params.idHotel;
-    if (req.user.rol == "Admin_Hotel") {
+    if (req.user.rol == "Admin_APP") {
         if (parametros.evento && parametros.tipo) {
-                eventoModel.tipo = parametros.tipo;
-                eventoModel.evento = parametros.evento;
-                eventoModel.idHotel = idHotel;
-                eventoModel.save((err, eventoGuardado) => {
-                    if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
-                    if (!eventoGuardado) return res.status(500).send({ mensaje: 'Error al guardar el evento' });
+            eventoModel.tipo = parametros.tipo;
+            eventoModel.evento = parametros.evento;
+            eventoModel.idHotel = idHotel;
+            eventoModel.save((err, eventoGuardado) => {
+                if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
+                if (!eventoGuardado) return res.status(500).send({ mensaje: 'Error al guardar el evento' });
 
-                    return res.status(200).send({ evento: eventoGuardado })
-                });
+                return res.status(200).send({ evento: eventoGuardado })
+            });
         } else {
             return res.status(500).send({ mensaje: 'Ingrese los campos necesarios' });
         }
@@ -29,7 +29,7 @@ function agregarEvento(req, res) {
 function editarEvento(req, res) {
     var parametros = req.body;
     var idEvento = req.params.idEvento;
-    if (req.user.rol == 'Admin_Hotel') {
+    if (req.user.rol == 'Admin_APP') {
         if (parametros.idHotel) return res.status(500).send({ mensaje: 'Estos campos no se pueden ingresar' });
         Evento.findByIdAndUpdate(idEvento, parametros, { new: true }, (err, eventoActualizado) => {
             if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
@@ -45,24 +45,12 @@ function editarEvento(req, res) {
 //Eliminar
 function eliminarEventos(req, res) {
     var idEvento = req.params.idEvento;
-    if (req.user.rol == "Admin_Hotel") {
-        Hotel.findOne({ idUsuario: req.user.sub }, (err, hotelEncontrado) => {
+    if (req.user.rol == "Admin_APP") {
+        Evento.findByIdAndDelete(idEvento, (err, eventoEliminado) => {
             if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
-            if (!hotelEncontrado) return res.status(500).send({ mensaje: 'Error al encontrar el hotel' });
-            Evento.findById(idEvento, (err, eventoEncontrado) => {
-                if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
-                if (!eventoEncontrado) return res.status(500).send({ mensaje: "Error al encontrar el evento" });
-                if (hotelEncontrado._id == eventoEncontrado.idHotel) {
-                    Evento.findByIdAndDelete(idEvento, (err, eventoEliminado) => {
-                        if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
-                        if (!eventoEliminado) return res.status(500).send({ mensaje: 'Error al eliminar el evento' });
+            if (!eventoEliminado) return res.status(500).send({ mensaje: 'Error al eliminar el evento' });
 
-                        return res.status(200).send({ eventro: eventoEliminado });
-                    })
-                } else {
-                    return res.status(500).send({ mensaje: 'El evento no pertenece al hotel del administrador' });
-                }
-            })
+            return res.status(200).send({ eventro: eventoEliminado });
         })
     } else {
         return res.status(500).send({ mensaje: 'No esta autorizado' })
