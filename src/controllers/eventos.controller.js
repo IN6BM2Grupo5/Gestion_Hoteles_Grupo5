@@ -5,21 +5,18 @@ const Hotel = require("../models/hoteles.models");
 function agregarEvento(req, res) {
     var parametros = req.body;
     var eventoModel = new Evento();
+    var idHotel = req.params.idHotel;
     if (req.user.rol == "Admin_Hotel") {
         if (parametros.evento && parametros.tipo) {
-            Hotel.findOne({ idUsuario: req.user.sub }, (err, hotelEncontrado) => {
-                if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
-                if (!hotelEncontrado) return res.status(500).send({ mensaje: 'Error al encontrar el hotel' });
                 eventoModel.tipo = parametros.tipo;
                 eventoModel.evento = parametros.evento;
-                eventoModel.idHotel = hotelEncontrado._id;
+                eventoModel.idHotel = idHotel;
                 eventoModel.save((err, eventoGuardado) => {
                     if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
                     if (!eventoGuardado) return res.status(500).send({ mensaje: 'Error al guardar el evento' });
 
                     return res.status(200).send({ evento: eventoGuardado })
                 });
-            })
         } else {
             return res.status(500).send({ mensaje: 'Ingrese los campos necesarios' });
         }
@@ -74,20 +71,24 @@ function eliminarEventos(req, res) {
 
 //Buscar
 function verEventos(req, res) {
-    if (req.user.rol == "Admin_Hotel" || req.user.rol == 'Cliente') {
+
+    var idHotel;
+    if (req.user.rol == 'Admin_APP' || req.user.rol == 'Cliente') {
+        idHotel = req.params.idHotel;
+    } else if (req.user.rol == 'Admin_Hotel') {
         Hotel.findOne({ idUsuario: req.user.sub }, (err, hotelEncontrado) => {
             if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
             if (!hotelEncontrado) return res.status(500).send({ mensaje: 'Error al encontrar el hotel en la peticion' });
-            Evento.find({ idHotel: hotelEncontrado_id }, (err, eventosEncontrados) => {
-                if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
-                if (!eventosEncontrados) return res.status(500).send({ mensaje: 'Error al encontrar los eventos' });
 
-                return res.status(200).send({ eventos: eventosEncontrados });
-            })
+            idHotel = hotelEncontrado._id;
         });
-    } else {
-        return res.status(500).send({ mensaje: 'No esta autorizado' });
     }
+    Evento.find({ idHotel: idHotel }, (err, eventosEncontrados) => {
+        if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
+        if (!eventosEncontrados) return res.status(500).send({ mensaje: 'Error al encontrar los eventos' });
+
+        return res.status(200).send({ eventos: eventosEncontrados });
+    })
 }
 
 function verEventoPorId(req, res) {
