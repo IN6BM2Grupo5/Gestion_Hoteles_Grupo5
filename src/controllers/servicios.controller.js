@@ -70,22 +70,25 @@ function verServicios(req, res) {
     let idHotel;
     if(req.user.rol=='Admin_APP' || req.user.rol == 'Cliente'){
         idHotel = req.params.idHotel;
+        Servicio.find({ idHotel: idHotel }, (err, serviciosEncontrados) => {
+            if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
+            if (!serviciosEncontrados) return res.status(500).send({ mensaje: 'Error al encontrar las habitaciones encontradas' });
+    
+            return res.status(200).send({ servicios: serviciosEncontrados });
+        })
     }else if(req.user.rol == 'Admin_Hotel'){
         Hotel.findOne({idUsuario:req.user.sub},(err,hotelEncontrado)=>{
             if(err) return res.status(404).send({mensaje:'Error en la peticion'});
-            if(!hotelEncontrado) return res.status(500).send({mensaje:'Error al encontrar el hotel en la peticion'});
-            
+            if(!hotelEncontrado) return res.status(500).send({mensaje:'Error al encontrar el hotel en la peticion'}); 
             idHotel = hotelEncontrado._id;
+            Servicio.find({ idHotel: idHotel }, (err, serviciosEncontrados) => {
+                if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
+                if (!serviciosEncontrados) return res.status(500).send({ mensaje: 'Error al encontrar las habitaciones encontradas' });
+        
+                return res.status(200).send({ servicios: serviciosEncontrados });
+            })
         });
     }
-
-    Servicio.find({ idHotel: idHotel }, (err, serviciosEncontrados) => {
-        if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
-        if (!serviciosEncontrados) return res.status(500).send({ mensaje: 'Error al encontrar las habitaciones encontradas' });
-
-        return res.status(200).send({ servicios: serviciosEncontrados });
-    })
-
 }
 
 function verServiciosId(req, res) {

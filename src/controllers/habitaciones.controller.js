@@ -69,24 +69,30 @@ function eliminarHabitaciones(req, res) {
 
 //Buscar
 function verHabitaciones(req, res) {
-    let idHotel;
+    var idHotel;
     if (req.user.rol == 'Admin_APP' || req.user.rol == 'Cliente') {
         idHotel = req.params.idHotel;
+        Habitacion.find({ idHotel: idHotel }, (err, habitacionesEncontradas) => {
+            if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
+            if (!habitacionesEncontradas) return res.status(500).send({ mensaje: 'Error al encontrar las habitaciones encontradas' });
+
+            return res.status(200).send({ habitaciones: habitacionesEncontradas });
+        })
     } else if (req.user.rol == 'Admin_Hotel') {
         Hotel.findOne({ idUsuario: req.user.sub }, (err, hotelEncontrado) => {
             if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
             if (!hotelEncontrado) return res.status(500).send({ mensaje: 'Error al encontrar el hotel en la peticion' });
-
             idHotel = hotelEncontrado._id;
+            Habitacion.find({ idHotel: idHotel }, (err, habitacionesEncontradas) => {
+                if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
+                if (!habitacionesEncontradas) return res.status(500).send({ mensaje: 'Error al encontrar las habitaciones encontradas' });
+
+                return res.status(200).send({ habitaciones: habitacionesEncontradas });
+            })
         });
     }
 
-    Habitacion.find({ idHotel: idHotel }, (err, habitacionesEncontradas) => {
-        if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
-        if (!habitacionesEncontradas) return res.status(500).send({ mensaje: 'Error al encontrar las habitaciones encontradas' });
 
-        return res.status(200).send({ habitaciones: habitacionesEncontradas });
-    })
 }
 
 function verHabitacionPorId(req, res) {

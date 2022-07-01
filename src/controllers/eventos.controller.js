@@ -63,20 +63,25 @@ function verEventos(req, res) {
     let idHotel;
     if (req.user.rol == 'Admin_APP' || req.user.rol == 'Cliente') {
         idHotel = req.params.idHotel;
+        Evento.find({ idHotel: idHotel }, (err, eventosEncontrados) => {
+            if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
+            if (!eventosEncontrados) return res.status(500).send({ mensaje: 'Error al encontrar los eventos' });
+    
+            return res.status(200).send({ eventos: eventosEncontrados });
+        })
     } else if (req.user.rol == 'Admin_Hotel') {
         Hotel.findOne({ idUsuario: req.user.sub }, (err, hotelEncontrado) => {
             if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
             if (!hotelEncontrado) return res.status(500).send({ mensaje: 'Error al encontrar el hotel en la peticion' });
-
             idHotel = hotelEncontrado._id;
+            Evento.find({ idHotel: idHotel }, (err, eventosEncontrados) => {
+                if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
+                if (!eventosEncontrados) return res.status(500).send({ mensaje: 'Error al encontrar los eventos' });
+        
+                return res.status(200).send({ eventos: eventosEncontrados });
+            })
         });
     }
-    Evento.find({ idHotel: idHotel }, (err, eventosEncontrados) => {
-        if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
-        if (!eventosEncontrados) return res.status(500).send({ mensaje: 'Error al encontrar los eventos' });
-
-        return res.status(200).send({ eventos: eventosEncontrados });
-    })
 }
 
 function verEventoPorId(req, res) {
