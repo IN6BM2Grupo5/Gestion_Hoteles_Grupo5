@@ -6,7 +6,7 @@ function agregarServicio(req, res) {
     var parametros = req.body;
     var servicioModel = new Servicio();
     var idHotel = req.params.idHotel;
-    if (req.user.rol == "Admin_Hotel") {
+    if (req.user.rol == "Admin_APP") {
         if (parametros.servicio && parametros.precio) {
             if (parametros.precio >= 0) {
                 servicioModel.servicio = parametros.servicio;
@@ -93,7 +93,7 @@ function verServicios(req, res) {
 
 function verServiciosId(req, res) {
     var idServicio = req.params.idServicio;
-    if (req.user.rol == "Admin_Hotel") {
+    if (req.user.rol == "Admin_APP") {
         Servicio.findById(idServicio, (err, servicioEncontrado) => {
             if (err) return res.status(404).send({ mensaje: 'No esta autorizado' });
             if (!servicioEncontrado) return res.status(500).send({ mensaje: 'Error al encontrar la habitacion' });
