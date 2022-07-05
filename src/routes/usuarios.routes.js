@@ -13,4 +13,5 @@ api.get('/usuarioId/:idUsuario',md_autenticacion.Auth, usuarioController.encontr
 api.get('/usuarios',md_autenticacion.Auth, usuarioController.encontrarUsuarios);
 api.get('/Admins',md_autenticacion.Auth, usuarioController.encontrarAdminHotel);
 api.get('/usuariosPorNombre/:nombre',md_autenticacion.Auth, usuarioController.buscarusuariosPorNombre);
+api.get('/verCuenta',md_autenticacion.Auth, usuarioController.verCuenta);
 module.exports = api;

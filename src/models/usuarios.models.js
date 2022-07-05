@@ -8,8 +8,11 @@ const UsuariosSchema = Schema({
     rol: String,
     cuenta: [{
         descripcion: String,
-        precio:Number
-    }]
+        precio:Number,
+        cantidad: Number,
+        idHabitacion:{type: Schema.Types.ObjectId, ref: 'habitaciones'}
+    }],
+    total:Number
 });
 
 module.exports = mongoose.model('usuarios', UsuariosSchema);

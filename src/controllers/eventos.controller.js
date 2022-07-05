@@ -10,6 +10,7 @@ function agregarEvento(req, res) {
         if (parametros.evento && parametros.tipo) {
             eventoModel.tipo = parametros.tipo;
             eventoModel.evento = parametros.evento;
+            eventoModel.imagen = parametros.imagen;
             eventoModel.idHotel = idHotel;
             eventoModel.save((err, eventoGuardado) => {
                 if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });

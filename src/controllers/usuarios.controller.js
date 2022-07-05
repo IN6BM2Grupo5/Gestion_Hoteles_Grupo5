@@ -268,6 +268,19 @@ function buscarusuariosPorNombre(req,res){
   }
 }
 
+function verCuenta(req,res){
+  if(req.user.rol=='Cliente'){
+    Usuario.findById(req.user.sub,(err,usuarioEncontrado)=>{
+      if(err) return res.status(404).send({mensaje:'Error en la peticion'});
+      if(!usuarioEncontrado) return res.status(500).send({mensaje:'Error al encontrar el usuario encontrado'});
+      
+      return res.status(200).send({cuenta:usuarioEncontrado.cuenta});
+    })
+  }else{
+    return res.status(500).send({mensaje:'No esta autorizado'});
+  }
+}
+
 //Exports
 module.exports = {
   Registrar,
@@ -279,6 +292,7 @@ module.exports = {
   encontrarUsuarioId,
   encontrarUsuarios,
   encontrarAdminHotel,
-  buscarusuariosPorNombre
+  buscarusuariosPorNombre,
+  verCuenta
 };
 
