@@ -18,7 +18,7 @@ function reservar(req, res) {
                 if (!infoHabitacion) return res.status(500).send({ mensaje: 'Error al encontrar la habitacion' });
                 if (infoHabitacion.estado == 'Disponible') {
                     Reserva.find({ idUsuario: req.user.sub }, (err, usuarioEncontrado) => {
-                        Reserva.find({ idHotel: infoHabitacion.idHotel, idUsuario: req.user.suh }, (err, hospedado) => {
+                        Reserva.find({ idHotel: infoHabitacion.idHotel, idUsuario: req.user.sub }, (err, hospedado) => {
                             if (usuarioEncontrado.length == 0 || hospedado.length != 0) {
                                 var d1 = new Date(parametros.fechaInicio).getTime();
                                 var d2 = new Date(parametros.fechaFin).getTime();
