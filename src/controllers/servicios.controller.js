@@ -131,45 +131,41 @@ function pedirServicio(req, res) {
     var parametros = req.body;
     if (req.user.rol == 'Cliente') {
         if (parametros.habitacion && parametros.fechaInicio) {
-            Habitacion.findOne({ tipo: parametros.habitacion }, (err, habitacionEncontrada) => {
+            Reserva.findOne({ idHabitacion: parametros.idHabitacion }, (err, reservaEncontrada) => {
                 if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
-                if (!habitacionEncontrada) return res.status(500).send({ mensaje: 'Error al encontrar la habitacion' });
-                Reserva.findOne({ idHabitacion: habitacionEncontrada._id }, (err, reservaEncontrada) => {
-                    if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
-                    if (!reservaEncontrada) return res.status(500).send({ mensaje: 'Error al encontrar la reserva' });
-                    var d1 = new Date(parametros.fechaInicio).getTime();
-                    if (d1 <= reservaEncontrada.fechaFin.get(time) && d1 >= reservaEncontrada.fechaInicio.get(time)) {
-                        Servicio.findById(idServicio, (err, servicioEncontrado) => {
+                if (!reservaEncontrada) return res.status(500).send({ mensaje: 'Error al encontrar la reserva' });
+                var d1 = new Date(parametros.fechaInicio).getTime();
+                if (d1 <= reservaEncontrada.fechaFin.get(time) && d1 >= reservaEncontrada.fechaInicio.get(time)) {
+                    Servicio.findById(idServicio, (err, servicioEncontrado) => {
+                        if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
+                        if (!servicioEncontrado) return res.status(500).send({ mensaje: 'Error al encontrar el servicio' });
+                        Usuario.findByIdAndUpdate(req.user.sub, {
+                            $push: {
+                                cuenta: {
+                                    descripcion: servicioEncontrado.servicio,
+                                    fechaInicio: parametros.fechaInicio,
+                                    fechaFin: null,
+                                    precio: servicioEncontrado.precio, idHabitacion: parametros.idHabitacion
+                                }
+                            }
+                        }, { new: true }, (err, cuentaActualizada) => {
                             if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
-                            if (!servicioEncontrado) return res.status(500).send({ mensaje: 'Error al encontrar el servicio' });
-                            Usuario.findByIdAndUpdate(req.user.sub, {
-                                $push: {
-                                    cuenta: {
-                                        descripcion: servicioEncontrado.servicio,
-                                        fechaInicio: parametros.fechaInicio,
-                                        fechaFin: null,
-                                        precio: servicioEncontrado.precio, idHabitacion: habitacionEncontrada._id
-                                    }
-                                }
-                            }, { new: true }, (err, cuentaActualizada) => {
-                                if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
-                                if (!cuentaActualizada) return res.status(500).send({ mensaje: 'Error al actualizar la cuenta' });
-                                for (let i = 0; i < cuentaActualizada.cuenta.length; i++) {
-                                    totalCuenta += cuentaActualizada.cuenta[i].precio;
-                                }
-                                Usuario.findByIdAndUpdate(req.user.sub, { total: totalCuenta }, { new: true },
-                                    (err, totalActualizado) => {
-                                        if (err) return res.status(500).send({ mensaje: 'Error en la peticion' });
-                                        if (!totalActualizado) return res.status(500).send({ mensaje: 'Error al modificar el total de la cuenta' });
-                                        return res.status(200).send({cuenta:totalActualizado.cuenta});
-                                    });
-                            });
+                            if (!cuentaActualizada) return res.status(500).send({ mensaje: 'Error al actualizar la cuenta' });
+                            for (let i = 0; i < cuentaActualizada.cuenta.length; i++) {
+                                totalCuenta += cuentaActualizada.cuenta[i].precio;
+                            }
+                            Usuario.findByIdAndUpdate(req.user.sub, { total: totalCuenta }, { new: true },
+                                (err, totalActualizado) => {
+                                    if (err) return res.status(500).send({ mensaje: 'Error en la peticion' });
+                                    if (!totalActualizado) return res.status(500).send({ mensaje: 'Error al modificar el total de la cuenta' });
+                                    return res.status(200).send({ cuenta: totalActualizado.cuenta });
+                                });
                         });
-                    } else {
-                        return res.status(500).send({ mensaje: 'La fecha no concuerda con la reservacion de la habitacion' });
-                    }
-                });
-            })
+                    });
+                } else {
+                    return res.status(500).send({ mensaje: 'La fecha no concuerda con la reservacion de la habitacion' });
+                }
+            });
         }
     } else {
         return res.status(500).send({ mensaje: 'No esta autorizado' });
