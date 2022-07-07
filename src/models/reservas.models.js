@@ -6,6 +6,7 @@ const ReservasSchema = Schema({
     fechaFin:Date,
     idUsuario: {type: Schema.Types.ObjectId, ref: 'usuarios'},
     idHotel:{type: Schema.Types.ObjectId, ref: 'hoteles'},
+    idHabitacion:{type: Schema.Types.ObjectId, ref: 'habitaciones'}
 });
 
 module.exports = mongoose.model('reservas', ReservasSchema);

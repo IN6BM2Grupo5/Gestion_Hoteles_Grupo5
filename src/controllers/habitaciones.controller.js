@@ -9,16 +9,23 @@ function agregarHabitaciones(req, res) {
     if (req.user.rol == "Admin_APP") {
         if (parametros.tipo && parametros.precio) {
             if (parametros.precio >= 0) {
-                habitacionModel.tipo = parametros.tipo;
-                habitacionModel.estado = "Disponible";
-                habitacionModel.registros = 0;
-                habitacionModel.precio = parametros.precio;
-                habitacionModel.idHotel = idHotel;
-                habitacionModel.save((err, habitacionesGuardadas) => {
+                Habitacion.findOne({ tipo: parametros.tipo, idHotel: idHotel }, (err, habitacionEncontrada) => {
                     if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
-                    if (!habitacionesGuardadas) return res.status(500).send({ mensaje: 'Error al guardar el hotel' });
+                    if (!habitacionEncontrada) {
+                        habitacionModel.tipo = parametros.tipo;
+                        habitacionModel.estado = "Disponible";
+                        habitacionModel.registros = 0;
+                        habitacionModel.precio = parametros.precio;
+                        habitacionModel.idHotel = idHotel;
+                        habitacionModel.save((err, habitacionesGuardadas) => {
+                            if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
+                            if (!habitacionesGuardadas) return res.status(500).send({ mensaje: 'Error al guardar el hotel' });
 
-                    return res.status(200).send({ habitaciones: habitacionesGuardadas })
+                            return res.status(200).send({ habitaciones: habitacionesGuardadas })
+                        });
+                    } else {
+                        return res.status(500).send({ mensaje: 'Este Evento ya se ha registrado' })
+                    }
                 });
             } else {
                 return res.status(500).send({ mensaje: 'Ingrese un precio razonable' });
@@ -38,12 +45,23 @@ function editarHabitaciones(req, res) {
     if (req.user.rol == 'Admin_APP') {
         if (parametros.estado || parametros.registros || parametros.idHotel) return res.status(500).send({ mensaje: 'Estos campos no se pueden ingresar' });
         if (parametros.precio >= 0) {
-            Habitacion.findByIdAndUpdate(idHabitacion, parametros, { new: true }, (err, habitacionActualizada) => {
+            Habitacion.findById(idHabitacion, (err, infoHabitacion) => {
                 if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
-                if (!habitacionActualizada) return res.status(500).send({ mensaje: 'Error al actualizar la habitacion' });
-
-                return res.status(200).send({ habitacion: habitacionActualizada });
-            })
+                if (!infoHabitacion) return res.status(500).send({ mensaje: 'Error al traer la informacion del servicio' });
+                Habitacion.findOne({ tipo: parametros.tipo, idHotel: infoHabitacion.idHotel }, (err, habitacionEncontrada) => {
+                    if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
+                    if (!habitacionEncontrada || infoHabitacion.tipo == parametros.tipo) {
+                        Habitacion.findByIdAndUpdate(idHabitacion, parametros, { new: true }, (err, habitacionActualizada) => {
+                            if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
+                            if (!habitacionActualizada) return res.status(500).send({ mensaje: 'Error al actualizar la habitacion' });
+            
+                            return res.status(200).send({ habitacion: habitacionActualizada });
+                        })
+                    } else {
+                        return res.status(500).send({ mensaje: 'Este Evento ya se ha registrado' });
+                    }
+                });
+            });
         } else {
             return res.status(500).send({ mensaje: 'Ingrese un precio razonable' });
         }

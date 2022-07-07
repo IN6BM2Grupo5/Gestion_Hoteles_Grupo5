@@ -29,7 +29,9 @@ function reservar(req, res) {
                                         $push: {
                                             cuenta: {
                                                 descripcion: infoHabitacion.tipo,
-                                                precio: infoHabitacion.precio, cantidad: 1, idHabitacion: idHabitacion
+                                                fechaInicio: parametros.fechaInicio,
+                                                fechaFin: parametros.fechaFin,
+                                                precio: infoHabitacion.precio, idHabitacion: idHabitacion
                                             }
                                         }
                                     }, { new: true }, (err, cuentaActualizada) => {
@@ -52,10 +54,11 @@ function reservar(req, res) {
                                                         reservaModel.fechaFin = parametros.fechaFin;
                                                         reservaModel.idUsuario = req.user.sub;
                                                         reservaModel.idHotel = infoHabitacion.idHotel;
-                                                        reservaModel.save((err,reservaGuardada)=>{
-                                                            if(err) return res.status(404).send({mensaje:'Error en la peticion'});
-                                                            if(!reservaGuardada) return res.status(500).send({mensaje:'Error al guardar la reserva'});
-                                                            return res.status(200).send({reserva:reservaGuardada});
+                                                        reservaModel.idHabitacion = idHabitacion;
+                                                        reservaModel.save((err, reservaGuardada) => {
+                                                            if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
+                                                            if (!reservaGuardada) return res.status(500).send({ mensaje: 'Error al guardar la reserva' });
+                                                            return res.status(200).send({ reserva: reservaGuardada });
                                                         });
                                                     })
                                                 });
@@ -81,6 +84,37 @@ function reservar(req, res) {
     }
 }
 
+//Busquedas
+function verHotelesRegistrados(req, res) {
+    if (req.user.rol == 'Cliente') {
+        Reserva.find({ idUsuario: hotelEncontrado._id }, (err, habitacionesEncontradas) => {
+            if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
+            if (!habitacionesEncontradas) return res.status(500).send({ mensaje: 'Error al encontrar las habitaciones encontradas' });
+            return res.status(200).send({ habitaciones: habitacionesEncontradas });
+        }).populate('idHabitacion', 'tipo');
+    } else {
+        return res.status(500).send({ mensaje: 'No esta autorizado' });
+    }
+}
+
+function verUsuariosRegistrados(req, res) {
+    if (req.user.rol == 'Admin_Hotel') {
+        Hotel.findOne({ idUsuario: req.user.sub }, (err, hotelEncontrado) => {
+            if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
+            if (!hotelEncontrado) return res.status(500).send({ mensaje: 'Error al encontrar el hotel' });
+            Reserva.find({ idHotel: hotelEncontrado._id }, (err, reservasHotel) => {
+                if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
+                if (!reservasHotel) return res.status(500).send({ mensaje: 'Error al encontrar las habitaciones encontradas' });
+                return res.status(200).send({ reservas: reservasHotel });
+            }).populate('idUsuario', 'usuario');
+        });
+    } else {
+        return res.status(500).send({ mensaje: 'No esta autorizado' });
+    }
+}
+
 module.exports = {
-    reservar
+    reservar,
+    verHotelesRegistrados,
+    verUsuariosRegistrados
 }

@@ -9,7 +9,8 @@ const UsuariosSchema = Schema({
     cuenta: [{
         descripcion: String,
         precio:Number,
-        cantidad: Number,
+        fechaInicio:Date,
+        fechaFin:Date,
         idHabitacion:{type: Schema.Types.ObjectId, ref: 'habitaciones'}
     }],
     total:Number
