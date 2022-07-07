@@ -182,5 +182,6 @@ module.exports = {
     editarServicio,
     eliminarServicio,
     verServicios,
-    verServiciosId
+    verServiciosId,
+    pedirServicio
 }
