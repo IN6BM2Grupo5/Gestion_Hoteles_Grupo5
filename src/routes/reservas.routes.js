@@ -5,7 +5,7 @@ const md_autenticacion = require('../middlewares/autenticacion');
 const api = express.Router();
 
 api.put('/reservar/:idHabitacion', md_autenticacion.Auth, reservasController.reservar);
-api.get('/habitaciones',md_autenticacion.Auth, serviciosController.verServicios);
-api.get('/servicios',md_autenticacion.Auth, serviciosController.verServicios);
+api.get('/habitaciones',md_autenticacion.Auth, reservasController.verHabitacionesRegistrados);
+api.get('/usuariosHotel',md_autenticacion.Auth, reservasController.verUsuariosRegistrados);
 
 module.exports = api;

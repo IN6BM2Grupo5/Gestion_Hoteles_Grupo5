@@ -83,9 +83,82 @@ function reservar(req, res) {
         return res.status(500).send({ mensaje: 'No esta autorizado' });
     }
 }
+//Cancelar de la cuenta
+function cancelarReserva(req, res) {
+    var idCuenta = req.params.idCuenta;
+    var totalCuenta = 0;
+    if (req.user.sub == 'Cliente') {
+        Usuario.findOne({ cuenta: { $elemMatch: { _id: idCuenta } } },
+            (err, infoCuenta) => {
+                if (err) return res.status(500).send({ mensaje: "Error en la peticion" });
+                if (!infoCuenta) return res.status(500).send({ mensaje: "Error al encontrar el elemento" });
+                Habitacion.findOne({ tipo: infoCuenta.descripcion }, (err, habitacionEncontrada) => {
+                    if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
+                    if (habitacionEncontrada) {
+                        Reserva.findOneAndDelete({idHabitacion:infoCuenta.idHabitacion,idUsuario:req.user.sub},(err,reservaEliminada)=>{
+                            if(err) return res.status(404).send({mensaje:'Error en la peticion'});
+                            if(!reservaEliminada) return res.status(500).send({mensaje:'Error al eliminar la reserva'});
+                            Habitacion.findByIdAndUpdate(habitacionEncontrada._id, { estado: 'Disponible', $inc: { registros: -1 } }, { new: true }, (err, habitacionActualizada) => {
+                                if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
+                                if (!habitacionActualizada) return res.status(500).send({ mensaje: 'Error al editar la habitacion' });
+                                Hotel.findByIdAndUpdate(habitacionEncontrada.idHotel, { $inc: { reservas: -1 } }, { new: true }, (err, hotelActualizado) => {
+                                    if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
+                                    if (!hotelActualizado) return res.status(500).send({ mensaje: 'Error al actualizar el hotel' });
+                                    Reserva.find({idHabitacion:infoCuenta.idHabitacion,idUsuario:req.user.sub},(err,reservasExistentes)=>{
+                                        if(err) return res.status(404).send({mensaje:'Error en la peticion'});
+                                        if(reservasExistentes.length!=0){
+                                            
+                                        }else{
+                                            Usuario.findById(req.user.sub,(err,usuarioEncontrado)=>{
+                                                if(err) return res.status(404).send({mensaje:'Error en la peticion'});
+                                                if(!usuarioEncontrado) return res.status(500).send({mensaje:'Error al encontrar el usuario'});
+                                                for (let i = 0; i < usuarioEncontrado.cuenta.length; i++) {
+                                                    Usuario.findOneAndUpdate({carrito:{$elemMatch:{_id:carritoExistente.carrito[i]._id}}},{$pull:{carrito:{_id:carritoExistente.carrito[i]._id}}}, {new: true},
+                                                        (err, productoEliminado)=>{
+                                                            if(err) return res.status(404).send({mensaje: 'Eror en la peticion del Usuario'});
+                                                            if(!productoEliminado) return res.status(500).send({mensaje:'Error al actualizar el carrito'});
+                                                    })
+                                                }
+                                                Usuario.findByIdAndUpdate(req.user.sub, {total: totalCuenta},{new:true},
+                                                    (err, totalEditado)=>{
+                                                        if(err) return res.status(500).send({mensaje:'Error en la peticion de total Carrito'});
+                                                        if(!totalEditado) return res.status(500).send({mensaje: 'Error al modificar el total del carrito'});
+                                                        return res.status(200).send({usuario: totalEditado});
+                                                    })
+                                            });
+                                        }
+                                    });
+                                })
+                            });
+                        })
+                    } else {
+                        Usuario.findOneAndDelete({ cuenta: { $elemMatch: { _id: idCuenta } } },
+                            (err, elementoEliminado) => {
+                                if (err) return res.status(500).send({ mensaje: "Error en la peticion" });
+                                if (!elementoEliminado) return res.status(500).send({ mensaje: "Error al editar la Respuesta" });
+
+                                Usuario.findById(req.user.sub,(err,cuentaUsuario)=>{
+                                    if(err) return res.status(404).send({mensaje:'Error en la peticion'});
+                                    if(!cuentaUsuario) return res.status(500).send({mensaje:'Error al encontrar el usuario'});
+                                    for (let i = 0; i < cuentaActualizada.cuenta.length; i++) {
+                                        totalCuenta += cuentaActualizada.cuenta[i].precio;
+                                    }
+                                    Usuario.findByIdAndUpdate(req.user.sub, {total: totalCuenta},{new:true},
+                                        (err, totalEditado)=>{
+                                            if(err) return res.status(500).send({mensaje:'Error en la peticion de total Carrito'});
+                                            if(!totalEditado) return res.status(500).send({mensaje: 'Error al modificar el total del carrito'});
+                                            return res.status(200).send({usuario: totalEditado});
+                                        })
+                                });
+                            })
+                    }
+                })
+            });
+    }
+}
 
 //Busquedas
-function verHotelesRegistrados(req, res) {
+function verHabitacionesRegistrados(req, res) {
     if (req.user.rol == 'Cliente') {
         Reserva.find({ idUsuario: hotelEncontrado._id }, (err, habitacionesEncontradas) => {
             if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
@@ -115,6 +188,6 @@ function verUsuariosRegistrados(req, res) {
 
 module.exports = {
     reservar,
-    verHotelesRegistrados,
+    verHabitacionesRegistrados,
     verUsuariosRegistrados
 }
