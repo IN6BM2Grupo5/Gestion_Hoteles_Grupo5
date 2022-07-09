@@ -22,8 +22,8 @@ function reservar(req, res) {
                             if (usuarioEncontrado.length == 0 || hospedado.length != 0) {
                                 var d1 = new Date(parametros.fechaInicio).getTime();
                                 var d2 = new Date(parametros.fechaFin).getTime();
-                                var da1 = new Date(parametros.fechaInicio);
-                                var da2 = new Date(parametros.fechaFin);
+                                var da1 = moment.utc(parametros.fechaInicio).format('DD-MM-YYYY');
+                                var da2 = moment.utc(parametros.fechaFin).format('DD-MM-YYYY');
                                 if (d2 > d1) {
                                     dias = ((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
                                     total = Number(infoHabitacion.precio) * dias;
