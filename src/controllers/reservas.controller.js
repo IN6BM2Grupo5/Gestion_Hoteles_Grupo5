@@ -22,18 +22,18 @@ function reservar(req, res) {
                             if (usuarioEncontrado.length == 0 || hospedado.length != 0) {
                                 var d1 = new Date(parametros.fechaInicio).getTime();
                                 var d2 = new Date(parametros.fechaFin).getTime();
-                                var da1 = moment.utc(parametros.fechaInicio).format('DD-MM-YYYY');
-                                var da2 = moment.utc(parametros.fechaFin).format('DD-MM-YYYY');
-                                if (d2 > d1) {
+                                var da1 = new Date(parametros.fechaInicio);
+                                var da2 = new Date(parametros.fechaFin);
+                                if (d2 >= d1) {
                                     dias = ((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
-                                    total = Number(infoHabitacion.precio) * dias;
+                                    total = infoHabitacion.precio * dias;
                                     Usuario.findByIdAndUpdate(req.user.sub, {
                                         $push: {
                                             cuenta: {
                                                 descripcion: infoHabitacion.tipo,
                                                 fechaInicio: da1,
                                                 fechaFin: da2,
-                                                precio: infoHabitacion.precio, idHabitacion: idHabitacion
+                                                precio: total, idHabitacion: idHabitacion
                                             }
                                         }
                                     }, { new: true }, (err, cuentaActualizada) => {
@@ -88,56 +88,32 @@ function reservar(req, res) {
 
 //Cancelar de la cuenta
 function cancelarReserva(req, res) {
-    var idCuenta = req.params.idCuenta;
+    var descripcion = req.params.descripcion;
     var totalCuenta = 0;
     if (req.user.rol == 'Cliente') {
-        Usuario.findOne({ cuenta: { $elemMatch: { _id: idCuenta } } },
-            (err, infoCuenta) => {
-                if (err) return res.status(500).send({ mensaje: "Error en la peticion" });
-                if (!infoCuenta) return res.status(500).send({ mensaje: "Error al encontrar el elemento" });
-                Habitacion.findOne({ tipo: infoCuenta.descripcion }, (err, habitacionEncontrada) => {
+        Habitacion.findOne({ tipo: descripcion }, (err, habitacionEncontrada) => {
+            if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
+            if (habitacionEncontrada) {
+                Reserva.findOneAndDelete({ idHabitacion: habitacionEncontrada._id, idUsuario: req.user.sub }, (err, reservaEliminada) => {
                     if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
-                    if (habitacionEncontrada) {
-                        Reserva.findOneAndDelete({ idHabitacion: habitacionEncontrada.idHabitacion, idUsuario: req.user.sub }, (err, reservaEliminada) => {
+                    Habitacion.findByIdAndUpdate(habitacionEncontrada._id, { estado: 'Disponible', $inc: { registros: -1 } }, { new: true }, (err, habitacionActualizada) => {
+                        if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
+                        if (!habitacionActualizada) return res.status(500).send({ mensaje: 'Error al editar la habitacion' });
+                        Hotel.findByIdAndUpdate(habitacionEncontrada.idHotel, { $inc: { reservas: -1 } }, { new: true }, (err, hotelActualizado) => {
                             if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
-                            if (!reservaEliminada) return res.status(500).send({ mensaje: 'Error al eliminar la reserva' });
-                            Habitacion.findByIdAndUpdate(habitacionEncontrada._id, { estado: 'Disponible', $inc: { registros: -1 } }, { new: true }, (err, habitacionActualizada) => {
+                            if (!hotelActualizado) return res.status(500).send({ mensaje: 'Error al actualizar el hotel' });
+                            Reserva.find({ idUsuario: req.user.sub }, (err, reservasExistentes) => {
                                 if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
-                                if (!habitacionActualizada) return res.status(500).send({ mensaje: 'Error al editar la habitacion' });
-                                Hotel.findByIdAndUpdate(habitacionEncontrada._id, { $inc: { reservas: -1 } }, { new: true }, (err, hotelActualizado) => {
-                                    if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
-                                    if (!hotelActualizado) return res.status(500).send({ mensaje: 'Error al actualizar el hotel' });
-                                    Reserva.find({ idHabitacion: habitacionEncontrada._id, idUsuario: req.user.sub }, (err, reservasExistentes) => {
-                                        if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
-                                        if (reservasExistentes.length != 0) {
-                                            Usuario.findOneAndUpdate({ cuenta: { $elemMatch: { _id: idCuenta } } }, {$pull:{cuenta:{_id:idCuenta}}}, {new: true},
-                                                (err, elementoEliminado) => {
-                                                    if (err) return res.status(500).send({ mensaje: "Error en la peticion" });
-                                                    if (!elementoEliminado) return res.status(500).send({ mensaje: "Error al editar la Respuesta" });
-                                                    Usuario.findById(req.user.sub, (err, cuentaUsuario) => {
-                                                        if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
-                                                        if (!cuentaUsuario) return res.status(500).send({ mensaje: 'Error al encontrar el usuario' });
-                                                        for (let i = 0; i < cuentaUsuario.cuenta.length; i++) {
-                                                            totalCuenta += cuentaActualizada.cuenta[i].precio;
-                                                        }
-                                                        Usuario.findByIdAndUpdate(req.user.sub, { total: totalCuenta }, { new: true },
-                                                            (err, totalEditado) => {
-                                                                if (err) return res.status(500).send({ mensaje: 'Error en la peticion de total Carrito' });
-                                                                if (!totalEditado) return res.status(500).send({ mensaje: 'Error al modificar el total del carrito' });
-                                                                return res.status(200).send({ usuario: totalEditado });
-                                                            })
-                                                    });
-                                                })
-                                        } else {
-                                            Usuario.findById(req.user.sub, (err, usuarioEncontrado) => {
+                                if (reservasExistentes.length != 0) {
+                                    Usuario.findOneAndUpdate({ cuenta: { $elemMatch: { descripcion: descripcion } } }, { $pull: { cuenta: { descripcion: descripcion } } }, { new: true },
+                                        (err, elementoEliminado) => {
+                                            if (err) return res.status(500).send({ mensaje: "Error en la peticion" });
+                                            if (!elementoEliminado) return res.status(500).send({ mensaje: "Error al editar la Respuesta" });
+                                            Usuario.findById(req.user.sub, (err, cuentaUsuario) => {
                                                 if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
-                                                if (!usuarioEncontrado) return res.status(500).send({ mensaje: 'Error al encontrar el usuario' });
-                                                for (let i = 0; i < usuarioEncontrado.cuenta.length; i++) {
-                                                    Usuario.findOneAndUpdate({ cuenta: { $elemMatch: { _id: usuarioEncontrado.cuenta[i]._id } } }, { $pull: { cuenta: { _id: usuarioEncontrado.cuenta[i]._id } } }, { new: true },
-                                                        (err, elementoEliminado) => {
-                                                            if (err) return res.status(404).send({ mensaje: 'Eror en la peticion del Usuario' });
-                                                            if (!elementoEliminado) return res.status(500).send({ mensaje: 'Error al actualizar la cuenta' });
-                                                        })
+                                                if (!cuentaUsuario) return res.status(500).send({ mensaje: 'Error al encontrar el usuario' });
+                                                for (let i = 0; i < cuentaUsuario.cuenta.length; i++) {
+                                                    totalCuenta += cuentaUsuario.cuenta[i].precio;
                                                 }
                                                 Usuario.findByIdAndUpdate(req.user.sub, { total: totalCuenta }, { new: true },
                                                     (err, totalEditado) => {
@@ -146,35 +122,64 @@ function cancelarReserva(req, res) {
                                                         return res.status(200).send({ usuario: totalEditado });
                                                     })
                                             });
+                                        })
+                                } else {
+                                    Usuario.findById(req.user.sub, (err, usuarioEncontrado) => {
+                                        if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
+                                        if (!usuarioEncontrado) return res.status(500).send({ mensaje: 'Error al encontrar el usuario' });
+                                        for (let i = 0; i < usuarioEncontrado.cuenta.length; i++) {
+                                            Usuario.findOneAndUpdate({ cuenta: { $elemMatch: { descripcion: usuarioEncontrado.cuenta[i].descripcion } } }, { $pull: { cuenta: { descripcion: usuarioEncontrado.cuenta[i].descripcion } } }, { new: true },
+                                                (err, elementoEliminado) => {
+                                                    if (err) return res.status(404).send({ mensaje: 'Eror en la peticion del Usuario' });
+                                                    if (!elementoEliminado) return res.status(500).send({ mensaje: 'Error al actualizar la cuenta' });
+                                                })
                                         }
+                                        Usuario.findByIdAndUpdate(req.user.sub, { total: totalCuenta }, { new: true },
+                                            (err, totalEditado) => {
+                                                if (err) return res.status(500).send({ mensaje: 'Error en la peticion de total Carrito' });
+                                                if (!totalEditado) return res.status(500).send({ mensaje: 'Error al modificar el total del carrito' });
+                                                return res.status(200).send({ usuario: totalEditado });
+                                            })
                                     });
-                                })
+                                }
                             });
                         })
-                    } else {
-                        Usuario.findOneAndUpdate({ cuenta: { $elemMatch: { _id: idCuenta } } }, {$pull:{cuenta:{_id:idCuenta}}}, {new: true},
-                            (err, elementoEliminado) => {
-                                if (err) return res.status(500).send({ mensaje: "Error en la peticion" });
-                                if (!elementoEliminado) return res.status(500).send({ mensaje: "Error al editar la Respuesta" });
-                                Usuario.findById(req.user.sub, (err, cuentaUsuario) => {
-                                    if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
-                                    if (!cuentaUsuario) return res.status(500).send({ mensaje: 'Error al encontrar el usuario' });
-                                    for (let i = 0; i < cuentaUsuario.cuenta.length; i++) {
-                                        totalCuenta += cuentaActualizada.cuenta[i].precio;
-                                    }
-                                    Usuario.findByIdAndUpdate(req.user.sub, { total: totalCuenta }, { new: true },
-                                        (err, totalEditado) => {
-                                            if (err) return res.status(500).send({ mensaje: 'Error en la peticion de total Carrito' });
-                                            if (!totalEditado) return res.status(500).send({ mensaje: 'Error al modificar el total del carrito' });
-                                            return res.status(200).send({ usuario: totalEditado });
-                                        })
-                                });
-                            })
-                    }
+                    });
                 })
-            });
-    }else{
-        return res.status(500).send({mensaje:'No autorizado'})
+            } else {
+                Usuario.findOneAndUpdate({ cuenta: { $elemMatch: { descripcion: descripcion } } }, { $pull: { cuenta: { descripcion: descripcion } } }, { new: true },
+                    (err, elementoEliminado) => {
+                        if (err) return res.status(500).send({ mensaje: "Error en la peticion" });
+                        if (!elementoEliminado) return res.status(500).send({ mensaje: "Error al editar la Respuesta" });
+                        Usuario.findById(req.user.sub, (err, cuentaUsuario) => {
+                            if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
+                            if (!cuentaUsuario) return res.status(500).send({ mensaje: 'Error al encontrar el usuario' });
+                            for (let i = 0; i < cuentaUsuario.cuenta.length; i++) {
+                                totalCuenta += cuentaUsuario.cuenta[i].precio;
+                            }
+                            Usuario.findByIdAndUpdate(req.user.sub, { total: totalCuenta }, { new: true },
+                                (err, totalEditado) => {
+                                    if (err) return res.status(500).send({ mensaje: 'Error en la peticion de total Carrito' });
+                                    if (!totalEditado) return res.status(500).send({ mensaje: 'Error al modificar el total del carrito' });
+                                    return res.status(200).send({ usuario: totalEditado });
+                                })
+                        });
+                    })
+            }
+        })
+    } else {
+        return res.status(500).send({ mensaje: 'No autorizado' })
+    }
+}
+
+//Confirmar Cuenta
+function confirmarCuenta(req, res) {
+    var idUsuario = req.params.idUsuario;
+    if (req.user.rol == 'Cliente') {
+        idUsuario = req.user.sub;
+    }
+    if (req.user.rol == 'Cliente' || req.user.rol == 'Admin_Hotel') {
+
     }
 }
 

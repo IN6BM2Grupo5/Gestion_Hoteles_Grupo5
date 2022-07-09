@@ -129,6 +129,7 @@ function verServiciosId(req, res) {
 function pedirServicio(req, res) {
     var idServicio = req.params.idServicio;
     var parametros = req.body;
+    var totalCuenta = 0;
     if (req.user.rol == 'Cliente') {
         if (parametros.idHabitacion && parametros.fechaInicio) {
             Reserva.findOne({ idHabitacion: parametros.idHabitacion }, (err, reservaEncontrada) => {
