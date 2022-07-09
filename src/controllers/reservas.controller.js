@@ -22,6 +22,8 @@ function reservar(req, res) {
                             if (usuarioEncontrado.length == 0 || hospedado.length != 0) {
                                 var d1 = new Date(parametros.fechaInicio).getTime();
                                 var d2 = new Date(parametros.fechaFin).getTime();
+                                var da1 = new Date(parametros.fechaInicio);
+                                var da2 = new Date(parametros.fechaFin);
                                 if (d2 > d1) {
                                     dias = ((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
                                     total = Number(infoHabitacion.precio) * dias;
@@ -29,8 +31,8 @@ function reservar(req, res) {
                                         $push: {
                                             cuenta: {
                                                 descripcion: infoHabitacion.tipo,
-                                                fechaInicio: parametros.fechaInicio,
-                                                fechaFin: parametros.fechaFin,
+                                                fechaInicio: da1,
+                                                fechaFin: da2,
                                                 precio: infoHabitacion.precio, idHabitacion: idHabitacion
                                             }
                                         }
