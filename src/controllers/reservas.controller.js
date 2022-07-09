@@ -96,16 +96,16 @@ function cancelarReserva(req, res) {
                 Habitacion.findOne({ tipo: infoCuenta.descripcion }, (err, habitacionEncontrada) => {
                     if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
                     if (habitacionEncontrada) {
-                        Reserva.findOneAndDelete({ idHabitacion: infoCuenta.idHabitacion, idUsuario: req.user.sub }, (err, reservaEliminada) => {
+                        Reserva.findOneAndDelete({ idHabitacion: habitacionEncontrada.idHabitacion, idUsuario: req.user.sub }, (err, reservaEliminada) => {
                             if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
                             if (!reservaEliminada) return res.status(500).send({ mensaje: 'Error al eliminar la reserva' });
                             Habitacion.findByIdAndUpdate(habitacionEncontrada._id, { estado: 'Disponible', $inc: { registros: -1 } }, { new: true }, (err, habitacionActualizada) => {
                                 if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
                                 if (!habitacionActualizada) return res.status(500).send({ mensaje: 'Error al editar la habitacion' });
-                                Hotel.findByIdAndUpdate(habitacionEncontrada.idHotel, { $inc: { reservas: -1 } }, { new: true }, (err, hotelActualizado) => {
+                                Hotel.findByIdAndUpdate(habitacionEncontrada._id, { $inc: { reservas: -1 } }, { new: true }, (err, hotelActualizado) => {
                                     if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
                                     if (!hotelActualizado) return res.status(500).send({ mensaje: 'Error al actualizar el hotel' });
-                                    Reserva.find({ idHabitacion: infoCuenta.idHabitacion, idUsuario: req.user.sub }, (err, reservasExistentes) => {
+                                    Reserva.find({ idHabitacion: habitacionEncontrada._id, idUsuario: req.user.sub }, (err, reservasExistentes) => {
                                         if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
                                         if (reservasExistentes.length != 0) {
                                             Usuario.findOneAndUpdate({ cuenta: { $elemMatch: { _id: idCuenta } } }, {$pull:{cuenta:{_id:idCuenta}}}, {new: true},
