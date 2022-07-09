@@ -88,7 +88,7 @@ function reservar(req, res) {
 function cancelarReserva(req, res) {
     var idCuenta = req.params.idCuenta;
     var totalCuenta = 0;
-    if (req.user.sub == 'Cliente') {
+    if (req.user.rol == 'Cliente') {
         Usuario.findOne({ cuenta: { $elemMatch: { _id: idCuenta } } },
             (err, infoCuenta) => {
                 if (err) return res.status(500).send({ mensaje: "Error en la peticion" });
