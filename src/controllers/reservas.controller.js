@@ -2,6 +2,10 @@ const Hotel = require("../models/hoteles.models");
 const Habitacion = require("../models/habitaciones.models");
 const Usuario = require("../models/usuarios.models");
 const Reserva = require("../models/reservas.models");
+const Facturas = require('../models/facturas.models');
+const req = require('express/lib/request');
+const PDF = require('pdfkit-construct');
+const fs = require('fs'); 
 
 //Hacer reserva
 function reservar(req, res) {
@@ -175,7 +179,8 @@ function confirmarCuenta(req, res) {
         return res.status(500).send({ mensaje: 'No esta autorizado' });
     }
     Usuario.findById(idUsuario,(err,usuarioEncontrado)=>{
-        if(usuarioEncontrado.cuenta.length==0) return .status(500).send({mensaje:'No cuenta con ningun elemento'})
+        if(usuarioEncontrado.cuenta.length==0) return res.status(500).send({mensaje:'No cuenta con ningun elemento'});
+
     })
 
 
@@ -195,7 +200,7 @@ function verHabitacionesRegistrados(req, res) {
 }
 
 function verUsuariosRegistrados(req, res) {
-    if (req.user.rol == 'Admin_Hotel') {
+    if (req.user.rol == 'Admin_Hotel') {s
         Hotel.findOne({ idUsuario: req.user.sub }, (err, infoHotel) => {
             Usuario.find({ idHotel: infoHotel._id }, (err, usuariosRegistrados) => {
                 if (err) return res.status(404).send({ mensaje: 'error en la peticion' });
