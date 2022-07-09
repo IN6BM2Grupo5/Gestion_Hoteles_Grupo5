@@ -6,6 +6,7 @@ const UsuariosSchema = Schema({
     usuario: String,
     password: String,
     rol: String,
+    idHotel:{type: Schema.Types.ObjectId, ref: 'hoteles'},
     cuenta: [{
         descripcion: String,
         precio:Number,

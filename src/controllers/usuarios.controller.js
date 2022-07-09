@@ -1,4 +1,5 @@
 const Usuario = require("../models/usuarios.models");
+const Hotel = require("../models/hoteles.models");
 
 const bcrypt = require("bcrypt-nodejs");
 const jwt = require("../services/jwt");
@@ -33,14 +34,14 @@ function Login(req, res) {
 //Agregar
 function AdminApp() {
   Usuario.find(
-    { rol: "Admin_APP", usuario: "AppAdmin" },
+    { rol: "Admin_APP", usuario: "SuperAdmin" },
     (err, usuarioEcontrado) => {
       if (usuarioEcontrado.length == 0) {
         bcrypt.hash("123456", null, null, (err, passwordEncriptada) => {
           Usuario.create({
             nombre: undefined,
             cuenta: undefined,
-            usuario: "AppAdmin",
+            usuario: "SuperAdmin",
             password: passwordEncriptada,
             rol: "Admin_APP",
           });
@@ -63,6 +64,7 @@ function Registrar(req, res) {
     usuarioModel.usuario = parametros.usuario;
     usuarioModel.password = parametros.password;
     usuarioModel.cuenta = undefined;
+    usuarioModel.idHotel = undefined;
     usuarioModel.rol = "Cliente";
 
     Usuario.find({ nombre: parametros.nombre }, (err, nombreEncontrado) => {
