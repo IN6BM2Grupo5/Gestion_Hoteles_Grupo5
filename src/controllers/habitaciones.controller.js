@@ -127,11 +127,28 @@ function verHabitacionPorId(req, res) {
     }
 }
 
+function verHabitacionesDisponibles(req,res){
+    if(req.user.rol=='Admin_Hotel'){
+        Hotel.findOne({idUsuario:req.user.sub},(err,hotelEncontrado)=>{
+            if(err) return res.status(404).send({mensaje:'Error en la peticion'});
+            if(!hotelEncontrado) return res.status(500).send({mensaje:'No cuenta con un hotel'});
+            Habitacion.find({estado:'disponible',idHotel:hotelEncontrado._id},(err,habitacionesDisponibles)=>{
+                if(err) return res.status(404).send({mensaje:'Error en la peticion'});
+                if(!habitacionesDisponibles) return res.status(500).send({mensaje:'No cuenta con habitaciones'});
+                return res.status(200).send({disponibles:habitacionesDisponibles});
+            })
+        })
+    }else{
+        return res.status(404).send({mesnaje:'Error en la peticion'})
+    }
+}
+
 //Exports
 module.exports = {
     agregarHabitaciones,
     editarHabitaciones,
     eliminarHabitaciones,
     verHabitacionPorId,
-    verHabitaciones
+    verHabitaciones,
+    verHabitacionesDisponibles
 }

@@ -5,7 +5,7 @@ const Reserva = require("../models/reservas.models");
 const Facturas = require('../models/facturas.models');
 const req = require('express/lib/request');
 const PDF = require('pdfkit-construct');
-const fs = require('fs'); 
+const fs = require('fs');
 
 //Hacer reserva
 function reservar(req, res) {
@@ -170,6 +170,7 @@ function cancelarReserva(req, res) {
 
 //Confirmar Cuenta
 function confirmarCuenta(req, res) {
+    const facturaModel = new Facturas();
     var idUsuario;
     if (req.user.rol == 'Cliente') {
         idUsuario = req.user.sub;
@@ -178,15 +179,53 @@ function confirmarCuenta(req, res) {
     } else {
         return res.status(500).send({ mensaje: 'No esta autorizado' });
     }
-    Usuario.findById(idUsuario,(err,usuarioEncontrado)=>{
-        if(usuarioEncontrado.cuenta.length==0) return res.status(500).send({mensaje:'No cuenta con ningun elemento'});
-
-    })
+    Usuario.findById(idUsuario, (err, usuarioEncontrado) => {
+        if (usuarioEncontrado.cuenta.length == 0) return res.status(500).send({ mensaje: 'No cuenta con ningun elemento' });
+        facturaModel.idUsuario = usuarioEncontrado._idUsuario;
+        facturaModel.cuenta = usuarioEncontrado.cuenta;
+        facturaModel.total = usuarioEncontrado.total;
+        facturaModel.save((err, facturaGuardada) => {
+            if (err) return res.status(404).send({ mesnaje: 'Error en la peticion' });
+            if (!facturaGuardada) return res.status(500).send({ mensaje: 'Error al guardar la factura' });
+            Reserva.find({ idUsuario: idUsuario }, (err, reservasUsuario) => {
+                if (err) return res.status(404).send({ mensaje: 'Error en la peticion' })
+                for (let i = 0; i < reservasUsuario.length; i++) {
+                    Habitacion.findByIdAndUpdate(reservasUsuario[i]._id, { estado: 'Disponible' }, { new: true }, (err, estadoHabitacion) => {
+                        if (err) return res.status(404).send({ mensaje: 'Error en la peticion' })
+                        if (!estadoHabitacion) return res.status(500).send({ mensaje: 'Error al editar la habitacion' })
+                        Reserva.findByIdAndDelete(reservasUsuario[i]._id, (err, reservaEliminada) => {
+                            if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
+                        });
+                    });
+                }
+                Usuario.findByIdAndUpdate(idUsuario, { $set: { carrito: [] }, totalCarrito: 0, $unset: { "idHotel": "" } }, { new: true },
+                (err, usuarioEditado) => {
+                    return res.status(200).send({ usuario: facturaGuardada })
+                })
+        })
+    });
+})
 
 
 }
 
 //Busquedas
+function verRegistros(req,res){
+    if(req.user.rol == 'Admin_Hotel'){
+        Hotel.findOne({idUsuario:req.user.sub},(err,hotelEncontrado)=>{
+            if(err) return res.status(404).send({mensaje:'Error en la peticion'});
+            if(!hotelEncontrado) return res.status(500).send({mensaje:'No cuenta con un hotel asignado'});
+            Reserva.find({idHotel:hotelEncontrado._id},(err,reservasDeHotel)=>{
+                if(err) return res.status(404).send({mensajeL:'Error en la peticion'});
+                if(!reservasDeHotel) return res.status(500).send({mensaje:'Error al encontrar las reservaas'});
+                return res.status(200).send({reservas:reservasDeHotel})
+            })
+        })
+    }else{
+        return res.status(500).send({mensaje:'No esta autorizado'});
+    }
+}
+
 function verHabitacionesRegistrados(req, res) {
     if (req.user.rol == 'Cliente') {
         Reserva.find({ idUsuario: hotelEncontrado._id }, (err, habitacionesEncontradas) => {
@@ -200,7 +239,7 @@ function verHabitacionesRegistrados(req, res) {
 }
 
 function verUsuariosRegistrados(req, res) {
-    if (req.user.rol == 'Admin_Hotel') {s
+    if (req.user.rol == 'Admin_Hotel') {
         Hotel.findOne({ idUsuario: req.user.sub }, (err, infoHotel) => {
             Usuario.find({ idHotel: infoHotel._id }, (err, usuariosRegistrados) => {
                 if (err) return res.status(404).send({ mensaje: 'error en la peticion' });
@@ -229,10 +268,39 @@ function verUsuariosRegistradosPorNombre(req, res) {
     }
 }
 
+//historial
+function verHistorial(req,res){
+    if(req.user.rol=='Cliente'){
+        Facturas.find({idUsuario:req.user.sub},(err,facturas)=>{
+            if(err) return res.status(404).send({mensaje:'Error en la peticion'});
+
+            return res.status(200).send({historial:facturas.cuenta})
+        })
+    }else{
+        return res.status(500).send({mensaje:'No esta autorizado'})
+    }
+}
+
+function verFacturas(req,res){
+    if(req.user.rol=='Cliente'){
+        Facturas.find({idUsuario:req.user.sub},(err,facturas)=>{
+            if(err) return res.status(404).send({mensaje:'Error en la peticion'});
+
+            return res.status(200).send({facturas:facturas})
+        })
+    }else{
+        return res.status(500).send({mensaje:'No esta autorizado'})
+    }
+}
+
 module.exports = {
     reservar,
     verHabitacionesRegistrados,
     verUsuariosRegistrados,
     cancelarReserva,
-    verUsuariosRegistradosPorNombre
+    verUsuariosRegistradosPorNombre,
+    confirmarCuenta,
+    verHistorial,
+    verFacturas,
+    verRegistros
 }
