@@ -130,12 +130,12 @@ function pedirServicio(req, res) {
     var idServicio = req.params.idServicio;
     var parametros = req.body;
     if (req.user.rol == 'Cliente') {
-        if (parametros.habitacion && parametros.fechaInicio) {
+        if (parametros.idHabitacion && parametros.fechaInicio) {
             Reserva.findOne({ idHabitacion: parametros.idHabitacion }, (err, reservaEncontrada) => {
                 if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
                 if (!reservaEncontrada) return res.status(500).send({ mensaje: 'Error al encontrar la reserva' });
                 var d1 = new Date(parametros.fechaInicio).getTime();
-                if (d1 <= reservaEncontrada.fechaFin.get(time) && d1 >= reservaEncontrada.fechaInicio.get(time)) {
+                if (d1 <= reservaEncontrada.fechaFin.getTime() && d1 >= reservaEncontrada.fechaInicio.getTime()) {
                     Servicio.findById(idServicio, (err, servicioEncontrado) => {
                         if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
                         if (!servicioEncontrado) return res.status(500).send({ mensaje: 'Error al encontrar el servicio' });
