@@ -191,7 +191,7 @@ function confirmarCuenta(req, res) {
             Reserva.find({ idUsuario: idUsuario }, (err, reservasUsuario) => {
                 if (err) return res.status(404).send({ mensaje: 'Error en la peticion' })
                 for (let i = 0; i < reservasUsuario.length; i++) {
-                    Habitacion.findByIdAndUpdate(reservasUsuario[i]._id, { estado: 'Disponible' }, { new: true }, (err, estadoHabitacion) => {
+                    Habitacion.findByIdAndUpdate(reservasUsuario[i].idHabitacion, { estado: 'Disponible' }, { new: true }, (err, estadoHabitacion) => {
                         if (err) return res.status(404).send({ mensaje: 'Error en la peticion' })
                         if (!estadoHabitacion) return res.status(500).send({ mensaje: 'Error al editar la habitacion' })
                         Reserva.findByIdAndDelete(reservasUsuario[i]._id, (err, reservaEliminada) => {
@@ -237,7 +237,7 @@ function verRegistros(req, res) {
 
 function verHabitacionesRegistrados(req, res) {
     if (req.user.rol == 'Cliente') {
-        Reserva.find({ idUsuario: hotelEncontrado._id }, (err, habitacionesEncontradas) => {
+        Reserva.find({ idUsuario: req.user.sub }, (err, habitacionesEncontradas) => {
             if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
             if (!habitacionesEncontradas) return res.status(500).send({ mensaje: 'Error al encontrar las habitaciones encontradas' });
             return res.status(200).send({ habitaciones: habitacionesEncontradas });
