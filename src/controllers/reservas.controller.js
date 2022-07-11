@@ -93,6 +93,7 @@ function reservar(req, res) {
 //Cancelar de la cuenta
 function cancelarReserva(req, res) {
     var descripcion = req.params.descripcion;
+    var idCuenta = req.params.idCuenta;
     var totalCuenta = 0;
     if (req.user.rol == 'Cliente') {
         Habitacion.findOne({ tipo: descripcion }, (err, habitacionEncontrada) => {
@@ -106,7 +107,7 @@ function cancelarReserva(req, res) {
                         Hotel.findByIdAndUpdate(habitacionEncontrada.idHotel, { $inc: { reservas: -1 } }, { new: true }, (err, hotelActualizado) => {
                             if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
                             if (!hotelActualizado) return res.status(500).send({ mensaje: 'Error al actualizar el hotel' });
-                            Usuario.findOneAndUpdate({ cuenta: { $elemMatch: { descripcion: descripcion } } }, { $pull: { cuenta: { descripcion: descripcion } } }, { new: true },
+                            Usuario.findOneAndUpdate({ cuenta: { $elemMatch: { _id: idCuenta } } }, { $pull: { cuenta: { _id: idCuenta } } }, { new: true },
                                 (err, elementoEliminado) => {
                                     if (err) return res.status(404).send({ mensaje: "Error en la peticion" });
                                     Usuario.findById(req.user.sub, (err, usuarioEncontrado) => {
@@ -143,7 +144,7 @@ function cancelarReserva(req, res) {
                     });
                 })
             } else {
-                Usuario.findOneAndUpdate({ cuenta: { $elemMatch: { descripcion: descripcion } } }, { $pull: { cuenta: { descripcion: descripcion } } }, { new: true },
+                Usuario.findOneAndUpdate({ cuenta: { $elemMatch: { _id: idCuenta }  } }, { $pull: { cuenta: { _id: idCuenta } } }, { new: true },
                     (err, elementoEliminado) => {
                         if (err) return res.status(404).send({ mensaje: "Error en la peticion" });
                         if (!elementoEliminado) return res.status(500).send({ mensaje: "Error al editar la Respuesta" });
@@ -199,30 +200,38 @@ function confirmarCuenta(req, res) {
                     });
                 }
                 Usuario.findByIdAndUpdate(idUsuario, { $set: { carrito: [] }, totalCarrito: 0, $unset: { "idHotel": "" } }, { new: true },
-                (err, usuarioEditado) => {
-                    return res.status(200).send({ usuario: facturaGuardada })
-                })
-        })
-    });
-})
+                    (err, usuarioEditado) => {
+                        return res.status(200).send({ usuario: facturaGuardada })
+                    })
+            })
+        });
+    })
+}
 
+//imprimirFactura
+function imprimirFactura(req,res){
+    var idFactura = req.params.idFactura;
+    if(req.user.rol=='Cliente'){
 
+    }else{
+        return res.status(404).send({mensaje:'No esta autorizado'});
+    }
 }
 
 //Busquedas
-function verRegistros(req,res){
-    if(req.user.rol == 'Admin_Hotel'){
-        Hotel.findOne({idUsuario:req.user.sub},(err,hotelEncontrado)=>{
-            if(err) return res.status(404).send({mensaje:'Error en la peticion'});
-            if(!hotelEncontrado) return res.status(500).send({mensaje:'No cuenta con un hotel asignado'});
-            Reserva.find({idHotel:hotelEncontrado._id},(err,reservasDeHotel)=>{
-                if(err) return res.status(404).send({mensajeL:'Error en la peticion'});
-                if(!reservasDeHotel) return res.status(500).send({mensaje:'Error al encontrar las reservaas'});
-                return res.status(200).send({reservas:reservasDeHotel})
+function verRegistros(req, res) {
+    if (req.user.rol == 'Admin_Hotel') {
+        Hotel.findOne({ idUsuario: req.user.sub }, (err, hotelEncontrado) => {
+            if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
+            if (!hotelEncontrado) return res.status(500).send({ mensaje: 'No cuenta con un hotel asignado' });
+            Reserva.find({ idHotel: hotelEncontrado._id }, (err, reservasDeHotel) => {
+                if (err) return res.status(404).send({ mensajeL: 'Error en la peticion' });
+                if (!reservasDeHotel) return res.status(500).send({ mensaje: 'Error al encontrar las reservaas' });
+                return res.status(200).send({ reservas: reservasDeHotel })
             })
         })
-    }else{
-        return res.status(500).send({mensaje:'No esta autorizado'});
+    } else {
+        return res.status(500).send({ mensaje: 'No esta autorizado' });
     }
 }
 
@@ -269,27 +278,27 @@ function verUsuariosRegistradosPorNombre(req, res) {
 }
 
 //historial
-function verHistorial(req,res){
-    if(req.user.rol=='Cliente'){
-        Facturas.find({idUsuario:req.user.sub},(err,facturas)=>{
-            if(err) return res.status(404).send({mensaje:'Error en la peticion'});
+function verHistorial(req, res) {
+    if (req.user.rol == 'Cliente') {
+        Facturas.find({ idUsuario: req.user.sub }, (err, facturas) => {
+            if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
 
-            return res.status(200).send({historial:facturas.cuenta})
+            return res.status(200).send({ historial: facturas.cuenta })
         })
-    }else{
-        return res.status(500).send({mensaje:'No esta autorizado'})
+    } else {
+        return res.status(500).send({ mensaje: 'No esta autorizado' })
     }
 }
 
-function verFacturas(req,res){
-    if(req.user.rol=='Cliente'){
-        Facturas.find({idUsuario:req.user.sub},(err,facturas)=>{
-            if(err) return res.status(404).send({mensaje:'Error en la peticion'});
+function verFacturas(req, res) {
+    if (req.user.rol == 'Cliente') {
+        Facturas.find({ idUsuario: req.user.sub }, (err, facturas) => {
+            if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
 
-            return res.status(200).send({facturas:facturas})
+            return res.status(200).send({ facturas: facturas })
         })
-    }else{
-        return res.status(500).send({mensaje:'No esta autorizado'})
+    } else {
+        return res.status(500).send({ mensaje: 'No esta autorizado' })
     }
 }
 
