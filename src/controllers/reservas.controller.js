@@ -65,7 +65,7 @@ function reservar(req, res) {
                                                             reservaModel.idUsuario = req.user.sub;
                                                             reservaModel.idHotel = infoHabitacion.idHotel;
                                                             reservaModel.idHabitacion = idHabitacion;
-                                                            reservaModel.tipo = infoHabitacion.tipo;
+                                                            reservaModel.habitacion = infoHabitacion.tipo;
                                                             reservaModel.save((err, reservaGuardada) => {
                                                                 if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
                                                                 if (!reservaGuardada) return res.status(500).send({ mensaje: 'Error al guardar la reserva' });
