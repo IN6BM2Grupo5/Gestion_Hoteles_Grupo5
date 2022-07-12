@@ -215,8 +215,7 @@ function imprimirFactura(req, res) {
         Facturas.findById(idFactura, (err, facturaEncontrada) => {
             if (err) return res.status(404).send({ mensaje: 'Error en la peticion' })
             if (!facturaGuardada) return res.status(500).sen({ mensajeL: 'Error al en encontrar la factura' });
-
-
+            Usuarios.findById(req.user.sub)
         });
     } else {
         return res.status(404).send({ mensaje: 'No esta autorizado' });
@@ -276,6 +275,7 @@ function verUsuariosRegistrados(req, res) {
 }
 
 function verUsuariosRegistradosPorNombre(req, res) {
+    var nombre = req.params.nombre;
     if (req.user.rol == 'Admin_Hotel') {
         Hotel.findOne({ idUsuario: req.user.sub }, (err, infoHotel) => {
             Usuario.find({ idHotel: infoHotel._id, nombre: { $regex: nombre, $options: 'i' } }, (err, usuariosRegistrados) => {
