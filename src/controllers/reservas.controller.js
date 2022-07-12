@@ -212,7 +212,12 @@ function confirmarCuenta(req, res) {
 function imprimirFactura(req,res){
     var idFactura = req.params.idFactura;
     if(req.user.rol=='Cliente'){
+        Facturas.findById(idFactura,(err,facturaEncontrada)=>{
+            if(err) return res.status(404).send({mensaje:'Error en la peticion'})
+            if(!facturaGuardada) return res.status(500).sen({mensajeL:'Error al en encontrar la factura'});
 
+
+        });
     }else{
         return res.status(404).send({mensaje:'No esta autorizado'});
     }
@@ -236,12 +241,20 @@ function verRegistros(req, res) {
 }
 
 function verHabitacionesRegistrados(req, res) {
+    var habitaciones = [];
     if (req.user.rol == 'Cliente') {
         Reserva.find({ idUsuario: req.user.sub }, (err, habitacionesEncontradas) => {
             if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
             if (!habitacionesEncontradas) return res.status(500).send({ mensaje: 'Error al encontrar las habitaciones encontradas' });
-            return res.status(200).send({ habitaciones: habitacionesEncontradas });
-        }).populate('idHabitacion', 'tipo');
+            for (let i = 0; i < habitacionesEncontradas.length; i++) {
+                Habitacion.findById(habitacionesEncontradas[i].idHabitacion, (err, habitacionEncontrada) => {
+                    if (err) return res.status(404).send({ mensaje: 'Error en la peticion' })
+                    if (!habitacionEncontrada) return res.status(500).send({ mensaje: 'Error al editar la habitacion' })
+                    habitaciones.push(habitacionEncontrada.tipo)
+                });
+            }
+            return res.status(200).send({habitaciones: habitaciones})
+        });
     } else {
         return res.status(500).send({ mensaje: 'No esta autorizado' });
     }
