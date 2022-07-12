@@ -144,7 +144,7 @@ function cancelarReserva(req, res) {
                     });
                 })
             } else {
-                Usuario.findOneAndUpdate({ cuenta: { $elemMatch: { _id: idCuenta }  } }, { $pull: { cuenta: { _id: idCuenta } } }, { new: true },
+                Usuario.findOneAndUpdate({ cuenta: { $elemMatch: { _id: idCuenta } } }, { $pull: { cuenta: { _id: idCuenta } } }, { new: true },
                     (err, elementoEliminado) => {
                         if (err) return res.status(404).send({ mensaje: "Error en la peticion" });
                         if (!elementoEliminado) return res.status(500).send({ mensaje: "Error al editar la Respuesta" });
@@ -190,17 +190,17 @@ function confirmarCuenta(req, res) {
             if (!facturaGuardada) return res.status(500).send({ mensaje: 'Error al guardar la factura' });
             Reserva.find({ idUsuario: idUsuario }, (err, reservasUsuario) => {
                 if (err) return res.status(404).send({ mensaje: 'Error en la peticion' })
-                for (let i = 0; i < reservasUsuario.length; i++) {
-                    Habitacion.findByIdAndUpdate(reservasUsuario[i].idHabitacion, { estado: 'Disponible' }, { new: true }, (err, estadoHabitacion) => {
-                        if (err) return res.status(404).send({ mensaje: 'Error en la peticion' })
-                        if (!estadoHabitacion) return res.status(500).send({ mensaje: 'Error al editar la habitacion' })
-                        Reserva.findByIdAndDelete(reservasUsuario[i]._id, (err, reservaEliminada) => {
-                            if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
-                        });
-                    });
-                }
-                Usuario.findByIdAndUpdate(idUsuario, { $set: { carrito: [] }, totalCarrito: 0, $unset: { "idHotel": "" } }, { new: true },
+                Usuario.findByIdAndUpdate(idUsuario, { $set: { cuenta: [] }, total: 0, $unset: { "idHotel": "" } }, { new: true },
                     (err, usuarioEditado) => {
+                        for (let i = 0; i < reservasUsuario.length; i++) {
+                            Habitacion.findByIdAndUpdate(reservasUsuario[i].idHabitacion, { estado: 'Disponible' }, { new: true }, (err, estadoHabitacion) => {
+                                if (err) return res.status(404).send({ mensaje: 'Error en la peticion' })
+                                if (!estadoHabitacion) return res.status(500).send({ mensaje: 'Error al editar la habitacion' })
+                                Reserva.findByIdAndDelete(reservasUsuario[i]._id, (err, reservaEliminada) => {
+                                    if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
+                                });
+                            });
+                        }
                         return res.status(200).send({ usuario: facturaGuardada })
                     })
             })
@@ -209,17 +209,17 @@ function confirmarCuenta(req, res) {
 }
 
 //imprimirFactura
-function imprimirFactura(req,res){
+function imprimirFactura(req, res) {
     var idFactura = req.params.idFactura;
-    if(req.user.rol=='Cliente'){
-        Facturas.findById(idFactura,(err,facturaEncontrada)=>{
-            if(err) return res.status(404).send({mensaje:'Error en la peticion'})
-            if(!facturaGuardada) return res.status(500).sen({mensajeL:'Error al en encontrar la factura'});
+    if (req.user.rol == 'Cliente') {
+        Facturas.findById(idFactura, (err, facturaEncontrada) => {
+            if (err) return res.status(404).send({ mensaje: 'Error en la peticion' })
+            if (!facturaGuardada) return res.status(500).sen({ mensajeL: 'Error al en encontrar la factura' });
 
 
         });
-    }else{
-        return res.status(404).send({mensaje:'No esta autorizado'});
+    } else {
+        return res.status(404).send({ mensaje: 'No esta autorizado' });
     }
 }
 
@@ -253,7 +253,7 @@ function verHabitacionesRegistrados(req, res) {
                     habitaciones.push(habitacionEncontrada);
                 });
             }
-            return res.status(200).send({habitaciones: habitaciones.tipo})
+            return res.status(200).send({ habitaciones: habitaciones.tipo })
         });
     } else {
         return res.status(500).send({ mensaje: 'No esta autorizado' });
