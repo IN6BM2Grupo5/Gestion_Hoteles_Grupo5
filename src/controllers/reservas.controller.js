@@ -225,7 +225,7 @@ function imprimirFactura(req, res) {
                 if(err) return res.status(404).send({mensaje:'Error en la peticion'})
                 if(!usuarioEncontrado) return res.status(500).send({mensaje:'Error en encontrar al usuario'});
                 factura(usuarioEncontrado,facturaEncontrada);
-                
+                return res.status(200).send({factura: facturaEncontrada});
             })
         });
     } else {
