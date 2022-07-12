@@ -185,7 +185,7 @@ function confirmarCuenta(req, res) {
     }
     Usuario.findById(idUsuario, (err, usuarioEncontrado) => {
         if (usuarioEncontrado.cuenta.length == 0) return res.status(500).send({ mensaje: 'No cuenta con ningun elemento' });
-        facturaModel.idUsuario = usuarioEncontrado.idUsuario;
+        facturaModel.idUsuario = usuarioEncontrado._id;
         facturaModel.cuenta = usuarioEncontrado.cuenta;
         facturaModel.total = usuarioEncontrado.total;
         facturaModel.save((err, facturaGuardada) => {
