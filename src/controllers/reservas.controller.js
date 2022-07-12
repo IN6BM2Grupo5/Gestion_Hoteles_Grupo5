@@ -184,7 +184,7 @@ function confirmarCuenta(req, res) {
     var idUsuario;
     if (req.user.rol == 'Cliente') {
         idUsuario = req.user.sub;
-    } else if (req.user.rol == 'AdminHotel') {
+    } else if (req.user.rol == 'Admin_Hotel') {
         idUsuario = req.params.idUsuario;
     } else {
         return res.status(500).send({ mensaje: 'No esta autorizado' });
