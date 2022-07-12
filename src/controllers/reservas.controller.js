@@ -332,6 +332,8 @@ function verHabitacionesRegistrados(req, res) {
 function verUsuariosRegistrados(req, res) {
     if (req.user.rol == 'Admin_Hotel') {
         Hotel.findOne({ idUsuario: req.user.sub }, (err, infoHotel) => {
+            if(err) return res.status(404).send({mensaje: 'Error en la peticion'});
+            if(!infoHotel) return res.status(500).send({mensaeje:'no cuenta con un hotel asignado'})
             Usuario.find({ idHotel: infoHotel._id }, (err, usuariosRegistrados) => {
                 if (err) return res.status(404).send({ mensaje: 'error en la peticion' });
                 if (!usuariosRegistrados) res.status(500).send({ mensaje: 'Error encontrando los usuarios' });
