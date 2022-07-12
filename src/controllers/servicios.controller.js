@@ -140,28 +140,32 @@ function pedirServicio(req, res) {
                     Servicio.findById(idServicio, (err, servicioEncontrado) => {
                         if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
                         if (!servicioEncontrado) return res.status(500).send({ mensaje: 'Error al encontrar el servicio' });
-                        Usuario.findByIdAndUpdate(req.user.sub, {
-                            $push: {
-                                cuenta: {
-                                    descripcion: servicioEncontrado.servicio,
-                                    fechaInicio: parametros.fechaInicio,
-                                    fechaFin: null,
-                                    precio: servicioEncontrado.precio, idHabitacion: parametros.idHabitacion
+                        Habitacion.findById(parametros.idHabitacion,(err,infoHabitacion)=>{
+                            if(err) return res.status(404).send({mensajeL:'Error en la peticion'});
+                            Usuario.findByIdAndUpdate(req.user.sub, {
+                                $push: {
+                                    cuenta: {
+                                        descripcion: servicioEncontrado.servicio,
+                                        fechaInicio: parametros.fechaInicio,
+                                        fechaFin: null,
+                                        habitacion:infoHabitacion.tipo,
+                                        precio: servicioEncontrado.precio, idHabitacion: parametros.idHabitacion
+                                    }
                                 }
-                            }
-                        }, { new: true }, (err, cuentaActualizada) => {
-                            if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
-                            if (!cuentaActualizada) return res.status(500).send({ mensaje: 'Error al actualizar la cuenta' });
-                            for (let i = 0; i < cuentaActualizada.cuenta.length; i++) {
-                                totalCuenta += cuentaActualizada.cuenta[i].precio;
-                            }
-                            Usuario.findByIdAndUpdate(req.user.sub, { total: totalCuenta }, { new: true },
-                                (err, totalActualizado) => {
-                                    if (err) return res.status(500).send({ mensaje: 'Error en la peticion' });
-                                    if (!totalActualizado) return res.status(500).send({ mensaje: 'Error al modificar el total de la cuenta' });
-                                    return res.status(200).send({ cuenta: totalActualizado.cuenta });
-                                });
-                        });
+                            }, { new: true }, (err, cuentaActualizada) => {
+                                if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
+                                if (!cuentaActualizada) return res.status(500).send({ mensaje: 'Error al actualizar la cuenta' });
+                                for (let i = 0; i < cuentaActualizada.cuenta.length; i++) {
+                                    totalCuenta += cuentaActualizada.cuenta[i].precio;
+                                }
+                                Usuario.findByIdAndUpdate(req.user.sub, { total: totalCuenta }, { new: true },
+                                    (err, totalActualizado) => {
+                                        if (err) return res.status(500).send({ mensaje: 'Error en la peticion' });
+                                        if (!totalActualizado) return res.status(500).send({ mensaje: 'Error al modificar el total de la cuenta' });
+                                        return res.status(200).send({ cuenta: totalActualizado.cuenta });
+                                    });
+                            });
+                        })
                     });
                 } else {
                     return res.status(500).send({ mensaje: 'La fecha no concuerda con la reservacion de la habitacion' });

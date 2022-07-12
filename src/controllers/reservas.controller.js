@@ -250,10 +250,10 @@ function verHabitacionesRegistrados(req, res) {
                 Habitacion.findById(habitacionesEncontradas[i].idHabitacion, (err, habitacionEncontrada) => {
                     if (err) return res.status(404).send({ mensaje: 'Error en la peticion' })
                     if (!habitacionEncontrada) return res.status(500).send({ mensaje: 'Error al editar la habitacion' })
-                    habitaciones.push(habitacionEncontrada.tipo)
+                    habitaciones.push(habitacionEncontrada);
                 });
             }
-            return res.status(200).send({habitaciones: habitaciones})
+            return res.status(200).send({habitaciones: habitaciones.tipo})
         });
     } else {
         return res.status(500).send({ mensaje: 'No esta autorizado' });
