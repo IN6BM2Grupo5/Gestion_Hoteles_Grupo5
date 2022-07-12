@@ -298,8 +298,7 @@ function verHistorial(req, res) {
     if (req.user.rol == 'Cliente') {
         Facturas.find({ idUsuario: req.user.sub }, (err, facturas) => {
             if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
-
-            return res.status(200).send({ historial: facturas.cuenta })
+            return res.status(200).send({ historial: facturas })
         })
     } else {
         return res.status(500).send({ mensaje: 'No esta autorizado' })
