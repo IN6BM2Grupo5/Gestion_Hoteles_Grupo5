@@ -214,15 +214,75 @@ function confirmarCuenta(req, res) {
 //imprimirFactura
 function imprimirFactura(req, res) {
     var idFactura = req.params.idFactura;
+    var f = new Date();
+    var Fecha = f.getDate() + "-" + f.getMonth() + "-" + f.getFullYear();
+    var Hora = f.getHours() + '-' + f.getMinutes() + '-' + f.getSeconds();
     if (req.user.rol == 'Cliente') {
         Facturas.findById(idFactura, (err, facturaEncontrada) => {
             if (err) return res.status(404).send({ mensaje: 'Error en la peticion' })
-            if (!facturaGuardada) return res.status(500).sen({ mensajeL: 'Error al en encontrar la factura' });
-            Usuarios.findById(req.user.sub)
+            if (!facturaEncontrada) return res.status(500).sen({ mensajeL: 'Error al en encontrar la factura' });
+            Usuario.findById(req.user.sub,(err,usuarioEncontrado)=>{
+                if(err) return res.status(404).send({mensaje:'Error en la peticion'})
+                if(!usuarioEncontrado) return res.status(500).send({mensaje:'Error en encontrar al usuario'});
+                factura(usuarioEncontrado,facturaEncontrada);
+                
+            })
         });
     } else {
         return res.status(404).send({ mensaje: 'No esta autorizado' });
     }
+}
+
+function factura(usuarioEncontrado,facturaEncontrada,){
+    var f = new Date();
+    var Fecha = f.getDate() + "-" + f.getMonth() + "-" + f.getFullYear();
+    var Hora = f.getHours() + '-' + f.getMinutes() + '-' + f.getSeconds();
+    var doc = new PDF({
+        size: 'A4',
+        margins: {top: 120, left: 50, right: 10, bottom: 20},
+        bufferPages: true,  
+    });
+            doc.setDocumentHeader({}, () => {
+    
+                doc.lineJoin('miter')
+                    .rect(0, 0, doc.page.width, doc.header.options.heightNumber).fill("#082183");
+    
+                doc.fill("#FFFFFF")
+                    .fontSize(20)
+                    .text("Factura No."+facturaEncontrada._id, doc.header.x, doc.header.y-93);
+            });
+            doc.fontSize(20).text('Consumidor: '+usuarioEncontrado.nombre);
+            doc.text(' ');
+
+            doc.fontSize(12).text('------------------------------------------------');
+            doc.fontSize(20).text('Total : '+facturaEncontrada.total);
+            doc.fontSize(12).text('------------------------------------------------');
+            doc.fontSize(15).text('Detalles:');
+            doc.text(' ');
+            for(let i = 0; i < facturaEncontrada.cuenta.length; i++){
+                doc.text('------------------------------------------------');
+                doc.text('Sercivio: Habitacion '+facturaEncontrada.cuenta[i].descripcion);
+                doc.text('Fecha de Inicio: '+facturaEncontrada.cuenta[i].fechaInicio);
+                doc.text('Fecha Final: '+facturaEncontrada.cuenta[i].fechaFin);
+                doc.text('precio: '+facturaEncontrada.cuenta[i].precio);
+                doc.text(' ');
+            }
+            
+    
+            doc.setDocumentFooter({}, () => {
+    
+                doc.lineJoin('miter')
+                    .rect(0, doc.footer.y, doc.page.width, doc.footer.options.heightNumber).fill("#4D6DEC");
+    
+                doc.fill("#FFFFFF")
+                    .fontSize(15)
+                    .text(Fecha, doc.footer.x+220, doc.footer.y+3);
+            });
+    
+            doc.render();
+    
+            doc.pipe(fs.createWriteStream ('Factura-'+usuarioEncontrado.nombre+'-'+Fecha+'-'+Hora+'.pdf'));
+            doc.end();
 }
 
 //Busquedas
