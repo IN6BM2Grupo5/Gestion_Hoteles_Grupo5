@@ -13,5 +13,6 @@ api.get('/usuariosHotelPorNombre/:nombre',md_autenticacion.Auth, reservasControl
 api.get('/verHistorial',md_autenticacion.Auth, reservasController.verHistorial);
 api.get('/verFacturas',md_autenticacion.Auth, reservasController.verFacturas);
 api.get('/verReservas',md_autenticacion.Auth, reservasController.verRegistros);
+api.get('/imprimirFactura/:idFactura',md_autenticacion.Auth, reservasController.imprimirFactura);
 
 module.exports = api;

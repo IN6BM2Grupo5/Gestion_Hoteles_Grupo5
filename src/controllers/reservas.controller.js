@@ -31,45 +31,51 @@ function reservar(req, res) {
                                 if (d2 >= d1) {
                                     dias = ((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
                                     total = infoHabitacion.precio * dias;
-                                    Usuario.findByIdAndUpdate(req.user.sub, {
-                                        $push: {
-                                            cuenta: {
-                                                descripcion: infoHabitacion.tipo,
-                                                fechaInicio: da1,
-                                                fechaFin: da2,
-                                                precio: total, idHabitacion: idHabitacion
+                                    Hotel.findById(infoHabitacion.idHotel,(err,infoHotel)=>{
+                                        if(err) return res.status(404).send({mensaje:'Error en la peticion'});
+
+                                        Usuario.findByIdAndUpdate(req.user.sub, {
+                                            $push: {
+                                                cuenta: {
+                                                    descripcion: infoHabitacion.tipo,
+                                                    fechaInicio: da1,
+                                                    fechaFin: da2,
+                                                    precio: total, idHabitacion: idHabitacion,
+                                                    hotel: infoHotel.nombreHotel
+                                                }
                                             }
-                                        }
-                                    }, { new: true }, (err, cuentaActualizada) => {
-                                        if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
-                                        if (!cuentaActualizada) return res.status(500).send({ mensaje: 'Error al actualizar la cuenta' });
-                                        for (let i = 0; i < cuentaActualizada.cuenta.length; i++) {
-                                            totalCuenta += cuentaActualizada.cuenta[i].precio;
-                                        }
-                                        Usuario.findByIdAndUpdate(req.user.sub, { idHotel: infoHabitacion.idHotel, total: totalCuenta }, { new: true },
-                                            (err, totalActualizado) => {
-                                                if (err) return res.status(500).send({ mensaje: 'Error en la peticion' });
-                                                if (!totalActualizado) return res.status(500).send({ mensaje: 'Error al modificar el total de la cuenta' });
-                                                Habitacion.findByIdAndUpdate(idHabitacion, { estado: 'Reservado', $inc: { registros: 1 } }, { new: true }, (err, habitacionActualizada) => {
-                                                    if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
-                                                    if (!habitacionActualizada) return res.status(500).send({ mensaje: 'Error al editar la habitacion' });
-                                                    Hotel.findByIdAndUpdate(infoHabitacion.idHotel, { $inc: { reservas: 1 } }, { new: true }, (err, hotelActualizado) => {
+                                        }, { new: true }, (err, cuentaActualizada) => {
+                                            if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
+                                            if (!cuentaActualizada) return res.status(500).send({ mensaje: 'Error al actualizar la cuenta' });
+                                            for (let i = 0; i < cuentaActualizada.cuenta.length; i++) {
+                                                totalCuenta += cuentaActualizada.cuenta[i].precio;
+                                            }
+                                            Usuario.findByIdAndUpdate(req.user.sub, { idHotel: infoHabitacion.idHotel, total: totalCuenta }, { new: true },
+                                                (err, totalActualizado) => {
+                                                    if (err) return res.status(500).send({ mensaje: 'Error en la peticion' });
+                                                    if (!totalActualizado) return res.status(500).send({ mensaje: 'Error al modificar el total de la cuenta' });
+                                                    Habitacion.findByIdAndUpdate(idHabitacion, { estado: 'Reservado', $inc: { registros: 1 } }, { new: true }, (err, habitacionActualizada) => {
                                                         if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
-                                                        if (!hotelActualizado) return res.status(500).send({ mensaje: 'Error al actualizar el hotel' });
-                                                        reservaModel.fechaInicio = parametros.fechaInicio;
-                                                        reservaModel.fechaFin = parametros.fechaFin;
-                                                        reservaModel.idUsuario = req.user.sub;
-                                                        reservaModel.idHotel = infoHabitacion.idHotel;
-                                                        reservaModel.idHabitacion = idHabitacion;
-                                                        reservaModel.save((err, reservaGuardada) => {
+                                                        if (!habitacionActualizada) return res.status(500).send({ mensaje: 'Error al editar la habitacion' });
+                                                        Hotel.findByIdAndUpdate(infoHabitacion.idHotel, { $inc: { reservas: 1 } }, { new: true }, (err, hotelActualizado) => {
                                                             if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
-                                                            if (!reservaGuardada) return res.status(500).send({ mensaje: 'Error al guardar la reserva' });
-                                                            return res.status(200).send({ reserva: reservaGuardada });
-                                                        });
-                                                    })
+                                                            if (!hotelActualizado) return res.status(500).send({ mensaje: 'Error al actualizar el hotel' });
+                                                            reservaModel.fechaInicio = parametros.fechaInicio;
+                                                            reservaModel.fechaFin = parametros.fechaFin;
+                                                            reservaModel.idUsuario = req.user.sub;
+                                                            reservaModel.idHotel = infoHabitacion.idHotel;
+                                                            reservaModel.idHabitacion = idHabitacion;
+                                                            reservaModel.tipo = infoHabitacion.tipo;
+                                                            reservaModel.save((err, reservaGuardada) => {
+                                                                if (err) return res.status(404).send({ mensaje: 'Error en la peticion' });
+                                                                if (!reservaGuardada) return res.status(500).send({ mensaje: 'Error al guardar la reserva' });
+                                                                return res.status(200).send({ reserva: reservaGuardada });
+                                                            });
+                                                        })
+                                                    });
                                                 });
-                                            });
-                                    });
+                                        });
+                                    })
                                 } else {
                                     return res.status(500).send({ mensaje: 'Agendo mal las fechas' });
                                 }
@@ -249,8 +255,9 @@ function factura(usuarioEncontrado,facturaEncontrada,){
     
                 doc.fill("#FFFFFF")
                     .fontSize(20)
-                    .text("Factura No."+facturaEncontrada._id, doc.header.x, doc.header.y-93);
+                    .text(facturaEncontrada.cuenta[0].hotel, doc.header.x, doc.header.y-93);
             });
+            doc.fontSize(20).text('Factura No: '+facturaEncontrada._id);
             doc.fontSize(20).text('Consumidor: '+usuarioEncontrado.nombre);
             doc.text(' ');
 
@@ -386,5 +393,6 @@ module.exports = {
     confirmarCuenta,
     verHistorial,
     verFacturas,
-    verRegistros
+    verRegistros,
+    imprimirFactura
 }

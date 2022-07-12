@@ -7,6 +7,8 @@ const FacturasSchema = Schema({
         descripcion: String,
         precio:Number,
         fechaInicio:Date,
+        hotel:String,
+        habitacion: String,
         fechaFin:Date,
         idHabitacion:{type: Schema.Types.ObjectId, ref: 'habitaciones'}
     }],

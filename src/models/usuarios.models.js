@@ -13,6 +13,7 @@ const UsuariosSchema = Schema({
         fechaInicio:Date,
         fechaFin:Date,
         habitacion: String,
+        hotel:String,
         idHabitacion:{type: Schema.Types.ObjectId, ref: 'habitaciones'}
     }],
     total:Number
